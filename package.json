@@ -4,7 +4,16 @@
   "description": "Serialize objects",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "lint": "eslint ./ --ignore-path .gitignore --ignore-pattern internals/scripts",
+    "lint:fix": "npm run lint --fix",
+    "lint:watch": "npm run lint --watch",
+    "reset_test_db": "node setup/reset_test_db.js",
+    "pretest": "cross-env NODE_ENV=test npm run reset_test_db",
+    "test": "cross-env NODE_ENV=test jest --testTimeout=60000",
+    "test:silent": "cross-env NODE_ENV=test jest --silent --testTimeout=10000",
+    "test:watch": "cross-env NODE_ENV=test jest --watch --testTimeout=10000",
+    "test:only": "cross-env NODE_ENV=test jest --testTimeout=10000",
+    "dev": "cross-env NODE_ENV=development nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -25,5 +34,12 @@
   "bugs": {
     "url": "https://github.com/jvverde/serialize/issues"
   },
-  "homepage": "https://github.com/jvverde/serialize#readme"
+  "homepage": "https://github.com/jvverde/serialize#readme",
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.12.1",
+    "jest": "^26.6.2",
+    "nodemon": "^2.0.6"
+  }
 }
