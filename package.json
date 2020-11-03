@@ -1,0 +1,29 @@
+{
+  "name": "cserialize",
+  "version": "0.0.1",
+  "description": "Serialize objects",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jvverde/serialize.git"
+  },
+  "keywords": [
+    "json",
+    "javscript",
+    "node",
+    "serialize",
+    "stringify",
+    "objects",
+    "nested",
+    "inherit"
+  ],
+  "author": "Isidro Vila Verde",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jvverde/serialize/issues"
+  },
+  "homepage": "https://github.com/jvverde/serialize#readme"
+}
