@@ -1,16 +1,16 @@
 const isValidVarName = require('./isValidVarName')
 
 const replacer = (key, value) => {
-  if (value && value instanceof Object && value.constructor !== Object
+  if (value && value instanceof Object && value.constructor
+    && value.constructor.name && value.constructor !== Object
     && value.constructor !== String && value.constructor !== Number
     && value.constructor !== Symbol && value.constructor !== Boolean
     && value.constructor !== Array && value.constructor !== Function
-    && value.constructor.name
     ) {
     return {
       _class: value.constructor.name,
       _key: key,
-      _value: Object.assign({}, value)
+      _value: replacer(Object.assign({}, value))
     }
   }
   return value
@@ -29,5 +29,5 @@ const reviver = (...classes) => {
     return value
   }
 }
-module.exports.serialize = (object)  => JSON.stringify(object, replacer)
+module.exports.serialize = (object)  => replacer(object)
 module.exports.deserialize = (string, ...classes) => JSON.parse(string, reviver(...classes))
