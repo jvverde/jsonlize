@@ -67,22 +67,17 @@ describe('Test (de)serialize of instances of classes', () => {
   describe('Test nested objects', () => {
     class C {
       constructor(n) {
-        this.op = n
-        this.a = new A(n)
+        this._a = new A(n)
       }
-      inc (n) {
-        this.op++
-        this.a.inc(n)
+      set a (value) {
+        this._a = value
       }
-      set cnt (value) {
-        this.op = value
-      }
-      get base() {
-        return this.a
+      get a () {
+        return this._a
       }
     }
     const c = new C(20)
-    const string = '{"_class":"C","_key":"","_value":{"op":20,"a":{"_class":"A","_key":"a","_value":{"n":20}}}}'
+    const string = '{"_class":"C","_key":"","_value":{"_a":{"_class":"A","_key":"_a","_value":{"n":20}}}}'
     const stringObj = JSON.parse(string)
 
     test(`should serialize an instance with a nested object instance`, () => {
@@ -98,8 +93,7 @@ describe('Test (de)serialize of instances of classes', () => {
     test(`Deserialize object must be able to invoke instance setters and getters`, () => {
       const cc = new C(25)
       const obj = deserialize(string, C, A)
-      obj.base.inc(5)
-      obj.cnt = 25
+      obj.a.inc(5)
       expect(obj).toMatchObject(cc)
     })
   })
