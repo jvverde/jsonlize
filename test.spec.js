@@ -1,6 +1,6 @@
 const { serialize, deserialize } = require('./index')
 
-describe('Test (de)serialize service', () => {
+describe('Test (de)serialize of instances of classes', () => {
   class A {
     constructor(n) {
       this.n = n

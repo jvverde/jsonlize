@@ -1,5 +1,5 @@
 {
-  "name": "cserialize",
+  "name": "jsonlize",
   "version": "0.0.1",
   "description": "Serialize objects",
   "main": "index.js",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jvverde/serialize.git"
+    "url": "git+https://github.com/jvverde/jsonlize.git"
   },
   "keywords": [
     "json",
