@@ -15,7 +15,7 @@
   },
   "jest": {
     "verbose": true,
-    "setupFilesAfterEnv": "jest-json"
+    "setupFilesAfterEnv": ["jest-json"]
   },
   "repository": {
     "type": "git",

@@ -14,7 +14,7 @@ describe('Test (de)serialize service', () => {
   const stringObj = JSON.parse(string)
 
   describe('Test instance of a class', () => {
-    test(`should serialize and instance of a given class`, () => {
+    test(`should serialize an  instance of a given class`, () => {
       const json = serialize(a)
       expect(json).toMatchJSON(stringObj)
     })
@@ -45,7 +45,7 @@ describe('Test (de)serialize service', () => {
     const string = '{"_class":"B","_key":"","_value":{"n":20}}'
     const stringObj = JSON.parse(string)
 
-    test(`should serialize and instance of a sub class`, () => {
+    test(`should serialize an instance of a sub class`, () => {
       const json = serialize(b)
       expect(json).toMatchJSON(stringObj)
     })
@@ -61,6 +61,46 @@ describe('Test (de)serialize service', () => {
       obj.inc(5)
       obj.dec(10)
       expect(obj).toMatchObject(bb)
+    })
+  })
+
+  describe('Test nested objects', () => {
+    class C {
+      constructor(n) {
+        this.op = n
+        this.a = new A(n)
+      }
+      inc (n) {
+        this.op++
+        this.a.inc(n)
+      }
+      set cnt (value) {
+        this.op = value
+      }
+      get base() {
+        return this.a
+      }
+    }
+    const c = new C(20)
+    const string = '{"_class":"C","_key":"","_value":{"op":20,"a":{"_class":"A","_key":"a","_value":{"n":20}}}}'
+    const stringObj = JSON.parse(string)
+
+    test(`should serialize an instance with a nested object instance`, () => {
+      const json = serialize(c)
+      expect(json).toMatchJSON(stringObj)
+    })
+
+    test(`should deserialize to an instance with a nested instance`, () => {
+      const obj = deserialize(string, C, A)
+      expect(obj).toMatchObject(c)
+    })
+
+    test(`Deserialize object must be able to invoke instance setters and getters`, () => {
+      const cc = new C(25)
+      const obj = deserialize(string, C, A)
+      obj.base.inc(5)
+      obj.cnt = 25
+      expect(obj).toMatchObject(cc)
     })
   })
 })
