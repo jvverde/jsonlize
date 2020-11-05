@@ -1,30 +1,5 @@
-const isValidVarName = require('./isValidVarName')
-
-const modify = (obj) => {
-  if (obj && obj instanceof Object) {
-    // console.log('is obj:', obj)
-    const keys = Object.keys(obj)
-    if (keys.length) {
-      const newobj = {}
-      keys.forEach(k => {
-        newobj[k] = replacer(obj[k])
-      })
-      return newobj
-    } else {
-      console.log('No keys for', obj)
-      return replacer(obj)
-    }
-  }
-  return obj
-}
 const replacer = (value) => {
-  // console.log('k,v =', key, value)
-  if (value && value instanceof Object && value.constructor
-    && value.constructor.name // && value.constructor !== Object
-    // && value.constructor !== String && value.constructor !== Number
-    // && value.constructor !== Symbol && value.constructor !== Boolean
-    //  && value.constructor !== Array && value.constructor !== Function
-    ) {
+  if (value && value instanceof Object && value.constructor && value.constructor.name ) {
     const _class = value.constructor.name
     let _value
     if (value instanceof Array) {
@@ -37,29 +12,33 @@ const replacer = (value) => {
       _value
     }
   }
- //  console.log("Didn't replace", value)
   return value
 }
-const reviver = (...classes) => {
-  const lookup = {}
-  classes.forEach(c => { lookup[c.name] = c.prototype })
-  return (key, value) => {
-    if (value instanceof Object && value._class && typeof value._class === 'string'
-      && isValidVarName(value._class) && lookup[value._class]
-      && typeof value._key === 'string' && value._value instanceof Object) {
-      const prototype = lookup[value._class]
-      const descriptors = Object.getOwnPropertyDescriptors(value._value)
-      return Object.create(prototype, descriptors)
+
+const modify = (obj) => {
+  if (obj && obj instanceof Object) {
+    const keys = Object.keys(obj)
+    if (keys.length) {
+      const newobj = {}
+      keys.forEach(k => {
+        newobj[k] = replacer(obj[k])
+      })
+      return newobj
+    } else {
+      console.warn('No keys for', obj)
+      return replacer(obj)
     }
-    return value
   }
+  return obj
 }
-const types = {
+
+const types = { // javascript builtin objects
   Date: v => new Date(v),
   Number: v => new Number(v),
   String: v => new String(v),
   Boolean: v => new Boolean(v),
-  Function: v => new Function(v)
+  // Idea from https://ovaraksin.blogspot.com/2013/10/pass-javascript-function-via-json.html
+  Function: v => new Function('return ' + v)()
 }
 const ktypes = Object.keys(types)
 
@@ -67,31 +46,47 @@ const reconstruct = (obj, ...classes) => {
   const lookup = {}
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
-  function f (obj) {
-    console.log('obj', typeof obj)
+  function compose (obj) {
+    // console.log('obj', typeof obj, obj)
     if(obj && obj instanceof Object && obj._class && typeof obj._class === 'string' && obj._value !== undefined) {
       if (obj._class === 'Array') {
-        return Object.keys(obj._values).map(k => f(obj._values[k]))
-      } else if (lookup[obj._class]) {
+        return Object.keys(obj._value).map(k => compose(obj._value[k]))
+      } else if (lookup[obj._class]) { // check if it is a user defined class
         const prototype = lookup[obj._class]
-        const children = f(obj._value)
+        const children = compose(obj._value)
         const descriptors = Object.getOwnPropertyDescriptors(children)
         return Object.create(prototype, descriptors)
-      } else if (ktypes.includes(obj._class)) {
+      } else if (ktypes.includes(obj._class)) { // check if it is builtin javascript object
         return types[obj._class](obj._value)
+      } else {
+        const children = compose(obj._value)
+        const descriptors = Object.getOwnPropertyDescriptors(children)
+        return Object.create({}, descriptors)
       }
     } else if(obj && obj instanceof Object) {
       const newobj = new Object()
       for (i in obj) {
-        newobj[i] = f(obj[i])
+        newobj[i] = compose(obj[i])
       }
       return newobj
     }
+    // if it is not an object return as is
     return obj
   }
-  return f(obj)
+  return compose(obj)
 }
 
-module.exports.serialize = (object)  => modify(object)
-// module.exports.deserialize = (string, ...classes) => JSON.parse(string, reviver(...classes))
-module.exports.deserialize = (obj, ...classes) => reconstruct(obj, ...classes)
+const serialize = object => {
+  const modified = modify(object)
+  return JSON.stringify(modified, (k,v) => {
+    if (v instanceof Function) return v.toString()
+    return v
+  })
+}
+const deserialize = (json, ...classes) => {
+  const modified = JSON.parse(json)
+  return reconstruct(modified, ...classes)
+}
+
+module.exports.serialize = serialize
+module.exports.deserialize = deserialize

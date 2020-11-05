@@ -32,35 +32,42 @@ class A {
   inc(n) {
     this.n += n
   }
+  get value () {
+    return this.n
+  }
 }
 const a = new A(10)
 
 const obj = {
   today,
-  string,
-  text,
-  bool,
-  falso,
-  number,
-  um,
-  array,
-  vector,
-  mix,
+  // string,
+  // text,
+  // bool,
+  // falso,
+  // number,
+  // um,
+  // array,
+  // vector,
+  // mix,
   f: function (a) {
-    return 5
+    console.log('a=', a)
   },
   g: (a) => a*a,
   a
 }
 
-const pre = serialize(obj)
+console.log(obj)
 
-console.log(pre)
-console.log(JSON.stringify(pre))
+const json = serialize(obj)
 
-const oo = deserialize(pre)
-console.log(oo)
+console.log(json)
 
+const newobj = deserialize(json, A)
+console.log(newobj)
+newobj.f('dddddddddddddddddd')
+console.log(newobj.today.toLocaleString())
+newobj.a.inc(33)
+console.log(newobj.a.value)
 
 /*const test = Object.create(Array.prototype)
 test[3] = 'c'
