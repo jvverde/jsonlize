@@ -1,7 +1,7 @@
 const replacer = (value) => {
   // if (value && value instanceof Object && value.constructor && value.constructor.name ) {
   // BigInt is not an Object!!!
-  if (value && value.constructor && value.constructor.name ) {
+  if (value && value.constructor && !basictypes.includes(obj.constructor) && value.constructor.name ) {
     const _class = value.constructor.name
     let _value
     if (value instanceof Array) {
