@@ -5,10 +5,10 @@ const replacer = (value) => {
     const _class = value.constructor.name
     let _value
     if (value instanceof Array) {
-      _value = value.map(v => modify(v))
-    } else if (specials.includes(_class)) {
+      _value = value.map(v => replacer(v))
+    } else if (specials[_class]) {
       //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
-      _value = value.toString()
+      _value = specials[_class](value)
     } else {
       _value = builtin.includes(_class) ? value : modify(Object.assign({}, value))
     }
@@ -19,6 +19,8 @@ const replacer = (value) => {
   }
   return value
 }
+
+const basictypes = [Number, String, Boolean]
 
 const modify = (obj) => {
   if (obj && obj instanceof Object) {
@@ -33,8 +35,8 @@ const modify = (obj) => {
       console.log('No keys for', obj)
       return replacer(obj)
     }
-  } else if (obj && obj.constructor && obj.constructor.name) {
-    console.log('Special case for', obj)
+  } else if (obj && obj.constructor && !basictypes.includes(obj.constructor) && obj.constructor.name) {
+    console.log('Special case for', obj, obj.constructor)
     return replacer(obj)
   } else {
     console.log('Do nothing for', obj)
@@ -48,11 +50,45 @@ const types = { // javascript builtin objects
   String: v => new String(v),
   Boolean: v => new Boolean(v),
   BigInt: v => BigInt(v),
+  Symbol: v => Symbol(v),
+  Error: v => {
+    const err = new Error(v.message || '')
+    if (v.name) err.name = v.name
+    return err
+  },
+  RegExp: v => {
+    const exp = new RegExp(v.source, v.flags)
+    if (v.lastIndex) exp.lastIndex = v.lastIndex
+    return exp
+  },
+  Set: (v, compose) => new Set(v.map(e => compose(e))),
   // Idea from https://ovaraksin.blogspot.com/2013/10/pass-javascript-function-via-json.html
   Function: v => new Function('return ' + v)()
 }
 const builtin = Object.keys(types)
-const specials = ['BigInt']
+
+const specials = {
+  BigInt: v => v.toString(),
+  Symbol: v => v.description,
+  Error: v => {
+    const { message, name } = v
+    return { message, name }
+  },
+  RegExp: v => {
+    const { source, flags, lastIndex } = v
+    return { source, flags, lastIndex }
+  },
+  Set: v => {
+    const set = [...v].map(v => {
+      console.log('v', v)
+      const m = replacer(v)
+      console.log('m', m)
+      return m
+    })
+    console.log('log set', set)
+    return set
+  }
+}
 
 const reconstruct = (obj, ...classes) => {
   const lookup = {}
@@ -69,7 +105,7 @@ const reconstruct = (obj, ...classes) => {
         const descriptors = Object.getOwnPropertyDescriptors(children)
         return Object.create(prototype, descriptors)
       } else if (builtin.includes(obj._class)) { // check if it is builtin javascript object
-        return types[obj._class](obj._value)
+        return types[obj._class](obj._value, compose)
       } else {
         const children = compose(obj._value)
         const descriptors = Object.getOwnPropertyDescriptors(children)
@@ -89,7 +125,7 @@ const reconstruct = (obj, ...classes) => {
 }
 
 const serialize = object => {
-  const modified = modify(object)
+  const modified = replacer(object)
   console.log('modified:', modified)
   return JSON.stringify(modified, (k,v) => {
     if (v instanceof Function) return v.toString()

@@ -65,6 +65,12 @@ const obj = {
   bi
 }
 
+console.log(a)
+const ajson = serialize(a)
+console.log(ajson)
+const newa = deserialize(ajson, A)
+console.log(newa)
+
 console.log(obj)
 
 const json = serialize(obj)
@@ -90,7 +96,50 @@ console.log(tj)
 const newt = deserialize(tj)
 console.log(newt)
 console.log(newt.toLocaleString())
-/*newobj.f('dddddddddddddddddd')
+
+console.log('--------------------')
+let sym = Symbol('foo')
+console.log(sym)
+const sj = serialize(sym)
+console.log(sj)
+const news = deserialize(sj)
+console.log(news)
+
+console.log('--------------------')
+const err = new Error('Aconteceu')
+console.log(err)
+const ej = serialize(err)
+console.log(ej)
+const newe = deserialize(ej)
+console.log(newe)
+
+console.log('--------------------')
+const re = /^all$/igs
+console.log(re)
+const rj = serialize(re)
+console.log(rj)
+const newr = deserialize(rj)
+console.log(newr)
+
+console.log('--------------------')
+
+const set = new Set([1,1,1,2, a, an, today])
+console.log(set)
+const setj = serialize(set)
+console.log(setj)
+const newset = deserialize(setj, A)
+console.log(newset)
+
+// const ia = new Int8Array(3)
+// const ia2 = new Int8Array([1,2,3,4])
+// const ia3 = new Int8Array(10)
+// console.log(ia)
+// console.log(ia2)
+// console.log(ia3)
+// console.log(ia3.constructor)
+// console.log(ia3.constructor.name)
+// console.log(typeof ia3.constructor)
+ /*newobj.f('dddddddddddddddddd')
 console.log(newobj.today.toLocaleString())
 newobj.a.inc(33)
 console.log(newobj.a.value)
