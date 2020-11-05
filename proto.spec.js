@@ -41,6 +41,7 @@ describe('Test (de)serialize of prototype objects', () => {
         enumerable: false, // so that it does not appear in 'for in' loop
         writable: true
     })
+    // B.prototype.constructor = B //from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
     const b = new B(20)
     const string = '{"_class":"B","_key":"","_value":{"n":20}}'
     const stringObj = JSON.parse(string)

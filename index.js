@@ -1,11 +1,16 @@
 const replacer = (value) => {
-  if (value && value instanceof Object && value.constructor && value.constructor.name ) {
+  // if (value && value instanceof Object && value.constructor && value.constructor.name ) {
+  // BigInt is not an Object!!!
+  if (value && value.constructor && value.constructor.name ) {
     const _class = value.constructor.name
     let _value
     if (value instanceof Array) {
       _value = value.map(v => modify(v))
+    } else if (specials.includes(_class)) {
+      //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
+      _value = value.toString()
     } else {
-      _value = ktypes.includes(_class) ? value : modify(Object.assign({}, value))
+      _value = builtin.includes(_class) ? value : modify(Object.assign({}, value))
     }
     return {
       _class,
@@ -25,9 +30,14 @@ const modify = (obj) => {
       })
       return newobj
     } else {
-      console.warn('No keys for', obj)
+      console.log('No keys for', obj)
       return replacer(obj)
     }
+  } else if (obj && obj.constructor && obj.constructor.name) {
+    console.log('Special case for', obj)
+    return replacer(obj)
+  } else {
+    console.log('Do nothing for', obj)
   }
   return obj
 }
@@ -37,10 +47,12 @@ const types = { // javascript builtin objects
   Number: v => new Number(v),
   String: v => new String(v),
   Boolean: v => new Boolean(v),
+  BigInt: v => BigInt(v),
   // Idea from https://ovaraksin.blogspot.com/2013/10/pass-javascript-function-via-json.html
   Function: v => new Function('return ' + v)()
 }
-const ktypes = Object.keys(types)
+const builtin = Object.keys(types)
+const specials = ['BigInt']
 
 const reconstruct = (obj, ...classes) => {
   const lookup = {}
@@ -56,7 +68,7 @@ const reconstruct = (obj, ...classes) => {
         const children = compose(obj._value)
         const descriptors = Object.getOwnPropertyDescriptors(children)
         return Object.create(prototype, descriptors)
-      } else if (ktypes.includes(obj._class)) { // check if it is builtin javascript object
+      } else if (builtin.includes(obj._class)) { // check if it is builtin javascript object
         return types[obj._class](obj._value)
       } else {
         const children = compose(obj._value)
@@ -78,6 +90,7 @@ const reconstruct = (obj, ...classes) => {
 
 const serialize = object => {
   const modified = modify(object)
+  console.log('modified:', modified)
   return JSON.stringify(modified, (k,v) => {
     if (v instanceof Function) return v.toString()
     return v

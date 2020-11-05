@@ -37,23 +37,32 @@ class A {
   }
 }
 const a = new A(10)
+const an = {
+  i: 1,
+  j: 2,
+  f: function(){ return this.j + this.i},
+  g: (a) => 2 * a + 1
+}
+const bi = BigInt(9007199254740991)
 
 const obj = {
-  today,
+  // today,
   // string,
   // text,
   // bool,
   // falso,
-  // number,
-  // um,
+  number,
+  um,
   // array,
   // vector,
   // mix,
-  f: function (a) {
-    console.log('a=', a)
-  },
-  g: (a) => a*a,
-  a
+  // f: function (a) {
+  //   console.log('a=', a)
+  // },
+   g: (a) => a*a,
+   a,
+   an,
+  bi
 }
 
 console.log(obj)
@@ -64,10 +73,29 @@ console.log(json)
 
 const newobj = deserialize(json, A)
 console.log(newobj)
-newobj.f('dddddddddddddddddd')
+
+console.log('--------------------')
+const bij = serialize(bi)
+
+console.log(bij)
+
+const newbi = deserialize(bij)
+console.log(newbi)
+
+console.log('--------------------')
+const tj = serialize(today)
+
+console.log(tj)
+
+const newt = deserialize(tj)
+console.log(newt)
+console.log(newt.toLocaleString())
+/*newobj.f('dddddddddddddddddd')
 console.log(newobj.today.toLocaleString())
 newobj.a.inc(33)
 console.log(newobj.a.value)
+console.log(newobj.an.f())
+console.log(newobj.an.g(7))*/
 
 /*const test = Object.create(Array.prototype)
 test[3] = 'c'
