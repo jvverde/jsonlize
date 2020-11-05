@@ -1,50 +1,5 @@
-const replacer = (value) => {
-  // if (value && value instanceof Object && value.constructor && value.constructor.name ) {
-  // BigInt is not an Object!!!
-  if (value && value.constructor && !basictypes.includes(obj.constructor) && value.constructor.name ) {
-    const _class = value.constructor.name
-    let _value
-    if (value instanceof Array) {
-      _value = value.map(v => replacer(v))
-    } else if (specials[_class]) {
-      //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
-      _value = specials[_class](value)
-    } else {
-      _value = builtin.includes(_class) ? value : modify(Object.assign({}, value))
-    }
-    return {
-      _class,
-      _value
-    }
-  }
-  return value
-}
-
-const basictypes = [Number, String, Boolean]
-
-const modify = (obj) => {
-  if (obj && obj instanceof Object) {
-    const keys = Object.keys(obj)
-    if (keys.length) {
-      const newobj = {}
-      keys.forEach(k => {
-        newobj[k] = replacer(obj[k])
-      })
-      return newobj
-    } else {
-      console.log('No keys for', obj)
-      return replacer(obj)
-    }
-  } else if (obj && obj.constructor && !basictypes.includes(obj.constructor) && obj.constructor.name) {
-    console.log('Special case for', obj, obj.constructor)
-    return replacer(obj)
-  } else {
-    console.log('Do nothing for', obj)
-  }
-  return obj
-}
-
-const types = { // javascript builtin objects
+const basicTypes = [Number, String, Boolean]
+const builtinTypes = { // javascript builtin objects
   Date: v => new Date(v),
   Number: v => new Number(v),
   String: v => new String(v),
@@ -65,9 +20,8 @@ const types = { // javascript builtin objects
   // Idea from https://ovaraksin.blogspot.com/2013/10/pass-javascript-function-via-json.html
   Function: v => new Function('return ' + v)()
 }
-const builtin = Object.keys(types)
 
-const specials = {
+const weirdTypes = {
   BigInt: v => v.toString(),
   Symbol: v => v.description,
   Error: v => {
@@ -78,17 +32,56 @@ const specials = {
     const { source, flags, lastIndex } = v
     return { source, flags, lastIndex }
   },
-  Set: v => {
-    const set = [...v].map(v => {
-      console.log('v', v)
-      const m = replacer(v)
-      console.log('m', m)
-      return m
-    })
-    console.log('log set', set)
-    return set
-  }
+  Set: v => [...v].map(v => replacer(v))
 }
+
+
+const replacer = (obj) => {
+  // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
+  // BigInt is not an Object!!!
+  if (obj && obj.constructor && !basicTypes.includes(obj.constructor) && obj.constructor.name ) {
+    const _class = obj.constructor.name
+    let _value
+    if (obj instanceof Array) {
+      _value = obj.map(v => replacer(v))
+    } else if (weirdTypes[_class]) {
+      //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
+      _value = weirdTypes[_class](obj)
+    } else if (builtinTypes[_class]) {
+      _value =  obj
+    } else {
+      _value = modify(Object.assign({}, obj))
+    }
+    return {
+      _class,
+      _value
+    }
+  }
+  return obj
+}
+
+const modify = (obj) => {
+  if (obj && obj instanceof Object) {
+    const keys = Object.keys(obj)
+    if (keys.length) {
+      const newobj = {}
+      keys.forEach(k => {
+        newobj[k] = replacer(obj[k])
+      })
+      return newobj
+    } else {
+      console.log('No keys for', obj)
+      return replacer(obj)
+    }
+  } else if (obj && obj.constructor && !basicTypes.includes(obj.constructor) && obj.constructor.name) {
+    console.log('Special case for', obj, obj.constructor)
+    return replacer(obj)
+  } else {
+    console.log('Do nothing for', obj)
+  }
+  return obj
+}
+
 
 const reconstruct = (obj, ...classes) => {
   const lookup = {}
@@ -104,8 +97,8 @@ const reconstruct = (obj, ...classes) => {
         const children = compose(obj._value)
         const descriptors = Object.getOwnPropertyDescriptors(children)
         return Object.create(prototype, descriptors)
-      } else if (builtin.includes(obj._class)) { // check if it is builtin javascript object
-        return types[obj._class](obj._value, compose)
+      } else if (builtinTypes[obj._class]) { // check if it is builtin javascript object
+        return builtinTypes[obj._class](obj._value, compose)
       } else {
         const children = compose(obj._value)
         const descriptors = Object.getOwnPropertyDescriptors(children)
