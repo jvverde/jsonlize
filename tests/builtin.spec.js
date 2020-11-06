@@ -1,51 +1,77 @@
 const { serialize, deserialize } = require('../index')
 const { random, lorem } = require('faker')
 
-describe('Test (de)serialize of instances of javascript builtin objects', () => {
-  describe('Test basic type arrays', () => {
+describe('Test (de)serialize of instances of javascript objects', () => {
+  describe('Test if builtin object are exactly the same', () => {
+    const obj = { i: 1, j: [2, 3], o: { k: 4 } }
+    const array = [1, 2, 3, obj]
+    const set = [1, 1, 2, 2, array, obj]
+    const map = [ ['a', 1], ['b', 2], [array, obj], [obj, set] ]
+    const tests = {
+      'Boolean Object' : new Boolean(random.boolean()),
+      'literal Boolean': !random.boolean(),
+      'Number Object' : new Number(random.number()),
+      'literal Number': 0 | new Number(random.number()),
+      'String Object' : new String(lorem.paragraphs()),
+      'literal String' : `${lorem.paragraphs()}`,
+      'Date' : new Date(),
+      'BigInt' : BigInt(random.hexaDecimal(64)),
+      'ReExp' :  /^$/igsm,
+      'empty Object' : new Object,
+      'empty literal Object' : {},
+      'empty Array' : new Array,
+      'empty literal array' : [],
+      'empty Set': new Set(),
+      'empty Map': new Map(),
+      'Object' : new Object(obj),
+      'literal Object' : obj,
+      'Array' : new Array(...array),
+      'literal array' : array,
+      'Set': new Set(set),
+      'Map': new Map(map)
+    }
+    for (const [k, v] of Object.entries(tests)) {
+      test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
+        const json = serialize(v)
+        const result = deserialize(json)
+        expect(result).toStrictEqual(v)
+      })
+    }
+  })
+  describe('Test class instances', () => {
+    class A {}
+    class B extends A {}
+    const tests = {
+      'Class empty' : new A,
+      'Sub Class' : new B
+    }
+    for (const [k, v] of Object.entries(tests)) {
+      test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
+        const json = serialize(v)
+        const result = deserialize(json, v.constructor)
+        expect(result).toStrictEqual(v)
+      })
+      test(`Deserialize (WITHOUT class identification) of a serialized ${k} (${v}) should be equal to literal object`, () => {
+        const json = serialize(v)
+        const result = deserialize(json)
+        const obj = Object.create(v)
+        expect(result).toEqual(obj)
+      })
+    }
+  })
+  describe('More', () => {
+    class A {}
+    class B extends A {}
     for (let cnt = 1; cnt-->0; ){
-      const bool = new Boolean(random.boolean())
-      test(`Deserialize of a serialized Boolean Object (${bool}) should be strict equal`, () => {
-        const json = serialize(bool)
+      // --------------------------
+      const re = /^[a-f]{3,}$/igsm
+      test(`Deserialize of a serialized of Regex (${re}) should be also a re`, () => {
+        const json = serialize(re)
         const result = deserialize(json)
-        expect(result).toStrictEqual(bool)
-      })
-      const pbool = random.boolean() === random.boolean() // force it to be a primitive boolean
-      test(`Deserialize of a serialized primitive boolean (${pbool}) should be strict equal`, () => {
-        const json = serialize(pbool)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(pbool)
-      })
-      const number = new Number(random.number())
-      test(`Deserialize of a serialized Number Object (${number}) should be strict equal`, () => {
-        const json = serialize(number)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(number)
-      })
-      const pnumber = 0 | number // force it to be a primitive number
-      test(`Deserialize of a serialized primitive Number (${pnumber}) should be strict equal`, () => {
-        const json = serialize(pnumber)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(pnumber)
-      })
-      const string = new String(lorem.paragraphs())
-      test(`Deserialize of a serialized String Object (${string}) should be strict equal`, () => {
-        const json = serialize(string)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(string)
-      })
-      const pstring = '' + string // force it to be a primitive string
-      test(`Deserialize of a serialized primitive string (${pstring}) should be strict equal`, () => {
-        const json = serialize(pstring)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(pstring)
+        expect(result.test('abcd')).toBe(true)
+        expect(result.test('1234\nabcd')).toBe(true)
       })
       const date = new Date()
-      test(`Deserialize of a serialized of date object (${date}) should be strict equal`, () => {
-        const json = serialize(date)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(date)
-      })
       test(`Deserialize of a serialized of date object (${date}) should have Date's methods`, () => {
         const json = serialize(date)
         const result = deserialize(json)
@@ -62,31 +88,6 @@ describe('Test (de)serialize of instances of javascript builtin objects', () => 
         const g = deserialize(json)
         const pow = g(4)
         expect(pow).toBe(4*4*4)
-      })
-      const bint = BigInt(random.hexaDecimal(64))
-      test(`Deserialize of a serialized of BigInt (${bint}) should be exactly the same`, () => {
-        const json = serialize(bint)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(bint)
-      })
-      const re = /^[a-f]{3,}$/igsm
-      test(`Deserialize of a serialized of Regex (${re}) should be also a re`, () => {
-        const json = serialize(re)
-        const result = deserialize(json)
-        expect(result.test('abcd')).toBe(true)
-        expect(result.test('1234\nabcd')).toBe(true)
-      })
-      const obj = new Object()
-      test(`Deserialize of a serialized of Object should be exactly the same`, () => {
-        const json = serialize(obj)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(obj)
-      })
-      const lobj = {}
-      test(`Deserialize of a serialized of literal Object should be exactly the same`, () => {
-        const json = serialize(lobj)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(lobj)
       })
     }
   })
