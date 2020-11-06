@@ -56,9 +56,9 @@ const obj = {
   // array,
   // vector,
   // mix,
-  // f: function (a) {
-  //   console.log('a=', a)
-  // },
+  f: function (a) {
+    console.log('a=', a)
+  },
    g: (a) => a*a,
    a,
    an,
@@ -79,6 +79,7 @@ console.log(json)
 
 const newobj = deserialize(json, A)
 console.log(newobj)
+newobj.f('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 console.log('--------------------')
 const bij = serialize(bi)
@@ -143,6 +144,42 @@ const fj = serialize(first)
 console.log(fj)
 const second = deserialize(fj, A)
 console.log(second)
+console.log('--------------------')
+
+const buffer = new ArrayBuffer(8)
+const view = new Int32Array(buffer)
+view[1] = 33
+console.log(buffer)
+console.log(view)
+console.log(buffer[4])
+
+console.log('--------------------')
+const au64 = new BigUint64Array([1n, 2n, 3n])
+console.log(au64)
+const au64j = serialize(au64)
+console.log(au64j)
+const au642 = deserialize(au64j)
+console.log(au642)
+
+console.log('--------------------')
+const ai64 = new BigInt64Array([1n, 2n, -3n])
+console.log(ai64)
+const ai64j = serialize(ai64)
+console.log(ai64j)
+const ai642 = deserialize(ai64j)
+console.log(ai642)
+
+console.log('--------------------')
+const ai8 = new Int8Array([1, 2, -3])
+console.log(ai8)
+const ai8j = serialize(ai8)
+console.log(ai8j)
+const ai82 = deserialize(ai8j)
+console.log(ai82)
+
+const i = 3
+console.log(i instanceof Object)
+console.log(i.constructor.name)
 // const ia = new Int8Array(3)
 // const ia2 = new Int8Array([1,2,3,4])
 // const ia3 = new Int8Array(10)

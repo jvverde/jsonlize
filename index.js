@@ -18,11 +18,23 @@ const builtinTypes = { // javascript builtin objects
   },
   Set: (v, compose) => new Set(v.map(e => compose(e))),
   Map: (v, compose) => new Map(v.map(e => compose(e))),
+  Int8Array: v => new Int8Array(v),
+  Uint8Array: v => new Uint8Array(v),
+  Int16Array: v => new Int16Array(v),
+  Uint16Array: v => new Uint16Array(v),
+  Int32Array: v => new Int32Array(v),
+  Uint32Array: v => new Uint32Array(v),
+  Float32Array: v => new Float32Array(v),
+  Float64Array: v => new Float64Array(v),
+  Uint8ClampedArray: v => new Uint8ClampedArray(v),
+  BigUint64Array: (v, compose) => new BigUint64Array(v.map(e => compose(e))),
+  BigInt64Array: (v, compose) => new BigInt64Array(v.map(e => compose(e))),
   // Idea from https://ovaraksin.blogspot.com/2013/10/pass-javascript-function-via-json.html
   Function: v => new Function('return ' + v)()
 }
 
 const weirdTypes = {
+  Function: v => v.toString(),
   BigInt: v => v.toString(),
   Symbol: v => v.description,
   Error: v => {
@@ -34,14 +46,28 @@ const weirdTypes = {
     return { source, flags, lastIndex }
   },
   Set: v => [...v].map(v => replacer(v)),
-  Map: v => [...v].map(v => replacer(v))
+  Map: v => [...v].map(v => replacer(v)),
+  Int8Array: v => Array.from(v),
+  Uint8Array: v => Array.from(v),
+  Int16Array: v => Array.from(v),
+  Uint16Array: v => Array.from(v),
+  Int32Array: v => Array.from(v),
+  Uint32Array: v => Array.from(v),
+  Float32Array: v => Array.from(v),
+  Float64Array: v => Array.from(v),
+  Uint8ClampedArray: v => Array.from(v),
+  BigUint64Array: v => Array.from(v).map(e => replacer(e)),
+  BigInt64Array: v => Array.from(v).map(e => replacer(e))
 }
 
 
 const replacer = (obj) => {
   // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
-  // BigInt is not an Object!!!
-  if (obj && obj.constructor && !basicTypes.includes(obj.constructor) && obj.constructor.name ) {
+  // Change from above test as it reveals the BigInt is not an Object!!!
+  if (obj && obj.constructor && obj.constructor.name
+    // don't replace if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
+    && (!basicTypes.includes(obj.constructor) || obj instanceof Object)
+  ) {
     const _class = obj.constructor.name
     let _value
     if (obj instanceof Array) {
@@ -120,16 +146,10 @@ const reconstruct = (obj, ...classes) => {
 }
 
 const serialize = object => {
-  const modified = replacer(object)
-  console.log('modified:', modified)
-  return JSON.stringify(modified, (k,v) => {
-    if (v instanceof Function) return v.toString()
-    return v
-  })
+  return JSON.stringify(replacer(object))
 }
 const deserialize = (json, ...classes) => {
-  const modified = JSON.parse(json)
-  return reconstruct(modified, ...classes)
+  return reconstruct(JSON.parse(json), ...classes)
 }
 
 module.exports.serialize = serialize

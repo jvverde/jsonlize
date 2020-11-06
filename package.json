@@ -15,7 +15,9 @@
   },
   "jest": {
     "verbose": true,
-    "setupFilesAfterEnv": ["jest-json"]
+    "setupFilesAfterEnv": [
+      "jest-json"
+    ]
   },
   "repository": {
     "type": "git",
@@ -41,6 +43,7 @@
     "babel-eslint": "^10.1.0",
     "cross-env": "^7.0.2",
     "eslint": "^7.12.1",
+    "faker": "^5.1.0",
     "jest": "^26.6.2",
     "jest-json": "^1.0.2",
     "nodemon": "^2.0.6"
