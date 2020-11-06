@@ -40,6 +40,54 @@ describe('Test (de)serialize of instances of javascript builtin objects', () => 
         const result = deserialize(json)
         expect(result).toStrictEqual(pstring)
       })
+      const date = new Date()
+      test(`Deserialize of a serialized of date object (${date}) should be strict equal`, () => {
+        const json = serialize(date)
+        const result = deserialize(json)
+        expect(result).toStrictEqual(date)
+      })
+      test(`Deserialize of a serialized of date object (${date}) should have Date's methods`, () => {
+        const json = serialize(date)
+        const result = deserialize(json)
+        expect(() => {
+          result.getTime()
+          result.getUTCDate()
+          result.toLocaleString()
+          result.toTimeString()
+        }).not.toThrow();
+      })
+      const f = (a) => a*a*a
+      test(`Deserialize of a serialized of function should be Function`, () => {
+        const json = serialize(f)
+        const g = deserialize(json)
+        const pow = g(4)
+        expect(pow).toBe(4*4*4)
+      })
+      const bint = BigInt(random.hexaDecimal(64))
+      test(`Deserialize of a serialized of BigInt (${bint}) should be exactly the same`, () => {
+        const json = serialize(bint)
+        const result = deserialize(json)
+        expect(result).toStrictEqual(bint)
+      })
+      const re = /^[a-f]{3,}$/igsm
+      test(`Deserialize of a serialized of Regex (${re}) should be also a re`, () => {
+        const json = serialize(re)
+        const result = deserialize(json)
+        expect(result.test('abcd')).toBe(true)
+        expect(result.test('1234\nabcd')).toBe(true)
+      })
+      const obj = new Object()
+      test(`Deserialize of a serialized of Object should be exactly the same`, () => {
+        const json = serialize(obj)
+        const result = deserialize(json)
+        expect(result).toStrictEqual(obj)
+      })
+      const lobj = {}
+      test(`Deserialize of a serialized of literal Object should be exactly the same`, () => {
+        const json = serialize(lobj)
+        const result = deserialize(json)
+        expect(result).toStrictEqual(lobj)
+      })
     }
   })
   describe('Test binary arrays', () => {

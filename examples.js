@@ -177,9 +177,13 @@ console.log(ai8j)
 const ai82 = deserialize(ai8j)
 console.log(ai82)
 
-const i = 3
-console.log(i instanceof Object)
-console.log(i.constructor.name)
+console.log('--------------------')
+const o = {}
+console.log(o)
+const oj = serialize(o)
+console.log(oj)
+const o2 = deserialize(oj)
+console.log(o2)
 // const ia = new Int8Array(3)
 // const ia2 = new Int8Array([1,2,3,4])
 // const ia3 = new Int8Array(10)

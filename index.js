@@ -91,16 +91,11 @@ const replacer = (obj) => {
 const modify = (obj) => {
   if (obj && obj instanceof Object) {
     const keys = Object.keys(obj)
-    if (keys.length) {
-      const newobj = {}
-      keys.forEach(k => {
-        newobj[k] = replacer(obj[k])
-      })
-      return newobj
-    } else {
-      console.log('No keys for', obj)
-      return replacer(obj)
-    }
+    const newobj = {}
+    keys.forEach(k => {
+      newobj[k] = replacer(obj[k])
+    })
+    return newobj
   } else if (obj && obj.constructor && !basicTypes.includes(obj.constructor) && obj.constructor.name) {
     console.log('Special case for', obj, obj.constructor)
     return replacer(obj)
