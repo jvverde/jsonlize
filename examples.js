@@ -130,6 +130,19 @@ console.log(setj)
 const newset = deserialize(setj, A)
 console.log(newset)
 
+console.log('--------------------')
+let first = new Map([
+  [1, 'one'],
+  [2, 'two'],
+  [a, 'three'],
+])
+
+console.log(first)
+
+const fj = serialize(first)
+console.log(fj)
+const second = deserialize(fj, A)
+console.log(second)
 // const ia = new Int8Array(3)
 // const ia2 = new Int8Array([1,2,3,4])
 // const ia3 = new Int8Array(10)

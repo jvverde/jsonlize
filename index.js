@@ -17,6 +17,7 @@ const builtinTypes = { // javascript builtin objects
     return exp
   },
   Set: (v, compose) => new Set(v.map(e => compose(e))),
+  Map: (v, compose) => new Map(v.map(e => compose(e))),
   // Idea from https://ovaraksin.blogspot.com/2013/10/pass-javascript-function-via-json.html
   Function: v => new Function('return ' + v)()
 }
@@ -32,7 +33,8 @@ const weirdTypes = {
     const { source, flags, lastIndex } = v
     return { source, flags, lastIndex }
   },
-  Set: v => [...v].map(v => replacer(v))
+  Set: v => [...v].map(v => replacer(v)),
+  Map: v => [...v].map(v => replacer(v))
 }
 
 
