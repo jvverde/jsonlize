@@ -138,7 +138,8 @@ console.log('------------------------', cnt++)
 const re = /^$/imsg
 assert.same(/^$/igsm, new RegExp(re))
 
-// console.log(getAllPropertyNames(/^$/msgi))
+console.log(getAllPropertyNames(s))
+console.log(getAllPropertyNames(m))
 // console.log(getAllPropertyNames({}))
 // console.log('++++++++++++++++++++++++')
 // console.log(Object.getOwnPropertyNames(datea))
