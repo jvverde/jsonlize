@@ -3,6 +3,13 @@
 // https://stackoverflow.com/a/16788517
 // https://stackoverflow.com/a/1144249
 // https://stackoverflow.com/a/6713782
+function getAllPropertyNames(obj) {
+  const result = new Set()
+  do {
+      Object.getOwnPropertyNames(obj).forEach(p => { result.add(p) })
+  } while (obj = Object.getPrototypeOf(obj))
+  return [...result]
+}
 
 const isEqual = (x, y, cnt = 0) => {
   cnt++
@@ -39,7 +46,7 @@ const isEqual = (x, y, cnt = 0) => {
   const py = Object.getPrototypeOf(y)
   if (!isEqual(px, py, cnt)) { return _FALSE('Prototypes are different') }
 
-  if (typeof x === 'function' || x instanceof RegExp || x instanceof String) {
+  if (typeof x === 'function' /* || x instanceof RegExp*/ || x instanceof String) {
     const result = x.toString() === y.toString()
     return _RETURN(result, 'x.toString() === y.toString()')
   }
@@ -60,9 +67,7 @@ const isEqual = (x, y, cnt = 0) => {
     return _RETURN(x.every( (v, i) => isEqual(v, y[i], cnt)), 'y Array element compare')
   }
 
-  const props = new Set()
-  Object.getOwnPropertyNames(x).forEach(p => props.add(p))
-  Object.getOwnPropertyNames(y).forEach(p => props.add(p))
+  const props = new Set([...getAllPropertyNames(x), ...getAllPropertyNames(y)])
   if (props.size > 0) {
     return _RETURN([...props].every( p => isEqual(x[p], y[p], cnt)), 'Own Property compare')
   }
@@ -130,20 +135,11 @@ console.log('------------------------', cnt++)
 assert.diff(3, new Number(3))
 
 console.log('------------------------', cnt++)
-assert.same(/^$/ig, /^$/ig)
+const re = /^$/imsg
+assert.same(/^$/igsm, new RegExp(re))
 
-function getAllPropertyNames(obj) {
-  let result = new Set()
-  const c = object.constructor.name
-  while (obj) {
-      Object.getOwnPropertyNames(obj).forEach(p => result.add(`${c}::${p}`));
-      obj = Object.getPrototypeOf(obj);
-  }
-  return [...result]
-}
-
-
-console.log(getAllPropertyNames(datec))
+// console.log(getAllPropertyNames(/^$/msgi))
+// console.log(getAllPropertyNames({}))
 // console.log('++++++++++++++++++++++++')
 // console.log(Object.getOwnPropertyNames(datea))
 // console.log(datea.prototype)
