@@ -132,6 +132,18 @@ assert.diff(3, new Number(3))
 console.log('------------------------', cnt++)
 assert.same(/^$/ig, /^$/ig)
 
+function getAllPropertyNames(obj) {
+  let result = new Set()
+  const c = object.constructor.name
+  while (obj) {
+      Object.getOwnPropertyNames(obj).forEach(p => result.add(`${c}::${p}`));
+      obj = Object.getPrototypeOf(obj);
+  }
+  return [...result]
+}
+
+
+console.log(getAllPropertyNames(datec))
 // console.log('++++++++++++++++++++++++')
 // console.log(Object.getOwnPropertyNames(datea))
 // console.log(datea.prototype)
