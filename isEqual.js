@@ -4,23 +4,26 @@
 // https://stackoverflow.com/a/1144249
 // https://stackoverflow.com/a/6713782
 function getAllPropertyNames(obj) {
-  const result = new Set()
+  const s = new Set()
   do {
-      Object.getOwnPropertyNames(obj).forEach(p => { result.add(p) })
+      Object.getOwnPropertyNames(obj).forEach(p => { s.add(p) })
   } while (obj = Object.getPrototypeOf(obj))
-  return [...result]
+  return [...s]
 }
 
-const isEqual = (x, y, cnt = 0) => {
-  cnt++
-  // console.log(cnt, 'x:',x)
-  // console.log(cnt, 'y:',y)
+const isIterable = obj => obj && typeof obj[Symbol.iterator] === 'function'
+
+const isEqual = (x, y, spaces = '') => {
+  const prefix = spaces
+  spaces += '  '
+  // console.log(prefix, 'x:',x)
+  // console.log(prefix, 'y:',y)
   function _FALSE(location) {
-    console.log(cnt, 'false on', location, ':', x, '<=>', y)
+    console.log(prefix, 'is false on', location, ':', x, '<=>', y)
     return false
   }
   function _TRUE(location) {
-    console.log(cnt, 'true on', location, ':', x, '<=>', y)
+    console.log(prefix, 'is true on', location, ':', x, '<=>', y)
     return true
   }
   const _RETURN = (bool, line) => {
@@ -44,9 +47,10 @@ const isEqual = (x, y, cnt = 0) => {
 
   const px = Object.getPrototypeOf(x)
   const py = Object.getPrototypeOf(y)
-  if (!isEqual(px, py, cnt)) { return _FALSE('Prototypes are different') }
+  if (!isEqual(px, py, prefix)) { return _FALSE('Prototypes are different') }
 
-  if (typeof x === 'function' /* || x instanceof RegExp*/ || x instanceof String) {
+  if (typeof x === 'function' || typeof x ===  'string') {
+    // We don't use here 'x instanceof String' to avoid incorrectly compare subclasses of String
     const result = x.toString() === y.toString()
     return _RETURN(result, 'x.toString() === y.toString()')
   }
@@ -57,19 +61,25 @@ const isEqual = (x, y, cnt = 0) => {
     return _RETURN(result, 'x.valueOf() === y.valueOf()')
   }
 
-  if (x instanceof Set) {
-    return _RETURN([...x].every(v => y.has(v)), 'y Set member compare')
-  }
-  if (x instanceof Map) {
-    return _RETURN([...x].every(([k,v]) => isEqual(v, y.get(k), cnt)), 'y Map [key,value] compare')
-  }
-  if (x instanceof Array) {
-    return _RETURN(x.every( (v, i) => isEqual(v, y[i], cnt)), 'y Array element compare')
+  //Compare every properties
+  const props = new Set([...getAllPropertyNames(x), ...getAllPropertyNames(y)])
+  const check = [...props].every(p => isEqual(x[p], y[p], prefix))
+  if (!check) return _FALSE("At least one property doesn't match")
+
+  if (!(x instanceof String) && isIterable(x)) { //iterate except if x is a Strings
+    const [xo, yo] = [ [...x], [...y] ]
+    const check = xo.every((v, i) => isEqual(v, yo[i], prefix))
+    if (!check) {
+      return _FALSE('At least one iterable value is not equal')
+    } else {
+      //we are assuming here that All properties are already tested above
+      return _TRUE('Every element and every property match')
+    }
   }
 
-  const props = new Set([...getAllPropertyNames(x), ...getAllPropertyNames(y)])
-  if (props.size > 0) {
-    return _RETURN([...props].every( p => isEqual(x[p], y[p], cnt)), 'Own Property compare')
+  if(x instanceof String || x instanceof Function || x instanceof RegExp
+    || x instanceof Number  || x instanceof Boolean || Object.keys(x).length > 0) {
+    return _TRUE('Every property match')
   }
 
   // last attempt if we forget some "special" case or object has no properties at all
@@ -78,68 +88,151 @@ const isEqual = (x, y, cnt = 0) => {
 }
 
 const assert = {
-  same: (x, y) => console.log(isEqual(x, y) ? 'ok' : 'fail'),
-  diff: (x, y) => console.log(isEqual(x, y) ? 'fail' : 'ok')
+  same: (x, y) => console.log(isEqual(x, y) ? 'OK' : 'FAIL'),
+  diff: (x, y) => console.log(isEqual(x, y) ? 'FAIL' : 'OK')
 }
 
-let cnt = 1
-console.log('------------------------', cnt++)
+let prefix = 1
+console.log('------------------------', prefix++)
 assert.diff(null, undefined)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 assert.same(undefined, undefined)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 assert.same(null, null)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
+assert.same(3/0, 3/0)
+
+console.log('------------------------', prefix++)
+assert.same(+"xpto", +"1 + 2")
+
+console.log('------------------------', prefix++)
 const x = { i: 1 }
 const y = { i: 1 }
 assert.same(x, y)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 function A (i) { this.i = i }
 function B (i) { this.i = i }
 const a = new A(3)
 const b = new B(3)
 assert.diff(a, b)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 const s = new Set([x, a])
 const r = new Set([x, b])
 assert.diff(s, r)
-
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 const m = new Map([[x, a], [y, a]])
 const n = new Map([[x, a], [y, b]])
 assert.diff(m, n)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 const arraya = new Array(3, 2, 1, {a: s})
 const arrayb = new Array(3, 2, 1, {a: m})
 assert.diff(arraya, arrayb)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 const datea = new Date
 const dateb = new Date(datea)
 assert.same(datea, dateb)
 
-console.log('------------------------', cnt++)
-const datec = new Date
+console.log('------------------------', prefix++)
+const datec = new Date('December 17, 1995 03:24:00')
 assert.diff(datea, datec)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 assert.diff(3, 4)
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 assert.diff(3, new Number(3))
 
-console.log('------------------------', cnt++)
+console.log('------------------------', prefix++)
 const re = /^$/imsg
 assert.same(/^$/igsm, new RegExp(re))
 
-console.log(getAllPropertyNames(s))
-console.log(getAllPropertyNames(m))
+console.log('------------------------', prefix++)
+const bint = BigInt(321)
+assert.same(bint, 321n)
+
+console.log('------------------------', prefix++)
+assert.diff(3, '3')
+
+console.log('------------------------', prefix++)
+assert.diff(3, new Number(3))
+
+console.log('------------------------', prefix++)
+assert.same(new Int8Array([3, -3]), new Int8Array([3, -3]))
+
+console.log('------------------------', prefix++)
+assert.diff(new Int8Array([3, -3]), new Int8Array([3, -3, 4]))
+
+console.log('------------------------', prefix++)
+assert.same(new BigInt64Array([3n, -3n]), new BigInt64Array([3n, -3n]))
+
+console.log('------------------------', prefix++)
+assert.diff(new BigInt64Array([3n, -3n]), new BigInt64Array([3n, 0n]))
+
+console.log('------------------------', prefix++)
+assert.same(new Float64Array([Math.PI, Math.E, 1/3, Math.sqrt(2)]), new Float64Array([Math.PI, Math.E, 1/3, Math.sqrt(2)]))
+
+console.log('------------------------', prefix++)
+assert.same([Math.PI, Math.E], [Math.PI, Math.E])
+
+console.log('------------------------', prefix++)
+const stringa = new String('ab')
+assert.same(stringa, new String('ab'))
+
+console.log('------------------------', prefix++)
+assert.diff(stringa, 'ab')
+
+const stringb = 'ab'
+class STR extends String{
+  constructor(s) {super(s)}
+}
+const str = new STR('abc')
+function STRB(s){
+  String.call(this, s)
+}
+STRB.prototype = Object.create(String.prototype)
+STRB.prototype.append = function(s) {this.a = s}
+STRB.prototype.constructor = STRB
+
+const strb = new STRB('abc')
+
+// console.log('------------------------')
+// console.log(isIterable(stringa))
+// console.log(stringa instanceof String)
+// console.log(stringa.constructor.name)
+// console.log(stringa.constructor === String)
+// console.log(typeof stringa)
+// console.log('------------------------')
+// console.log(isIterable(stringb))
+// console.log(stringb instanceof String)
+// console.log(stringb.constructor.name)
+// console.log(stringb.constructor === String)
+// console.log(typeof stringb)
+// console.log('------------------------')
+// console.log(isIterable(str))
+// console.log(str instanceof String)
+// console.log(str.constructor.name)
+// console.log(str.constructor === String)
+// console.log(typeof str)
+// console.log(str)
+
+// console.log('------------------------')
+// console.log(isIterable(strb))
+// console.log(strb instanceof String)
+// console.log(strb.constructor.name)
+// console.log(strb.constructor === STRB)
+// console.log(typeof strb)
+// console.log(strb)
+// console.log(getAllPropertyNames(s))
+// console.log(s.valueOf())
+// console.log(s.toString())
+// console.log(getAllPropertyNames(m))
 // console.log(getAllPropertyNames({}))
 // console.log('++++++++++++++++++++++++')
 // console.log(Object.getOwnPropertyNames(datea))
