@@ -84,6 +84,10 @@ const replacer = (obj) => {
       _class,
       _value
     }
+  } else if(obj === undefined) {
+    return {
+      _class: 'undefined'
+    }
   }
   return obj
 }
@@ -127,6 +131,9 @@ const reconstruct = (obj, ...classes) => {
         const descriptors = Object.getOwnPropertyDescriptors(children)
         return Object.create({}, descriptors)
       }
+    } else if(obj && obj instanceof Object && obj._class === 'undefined') {
+      console.log('undefined')
+      return undefined
     } else if(obj && obj instanceof Object) {
       const newobj = new Object()
       for (i in obj) {

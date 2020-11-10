@@ -1,4 +1,4 @@
-const { serialize, deserialize } = require('./index')
+const { serialize, deserialize } = require('../index')
 
 describe('Test (de)serialize of instances of classes', () => {
   class A {
@@ -10,7 +10,7 @@ describe('Test (de)serialize of instances of classes', () => {
     }
   }
   const a = new A(10)
-  const string = '{"_class":"A","_key":"","_value":{"n":10}}'
+  const string = '{"_class":"A","_value":{"n":10}}'
   const stringObj = JSON.parse(string)
 
   describe('Test instance of a class', () => {
@@ -42,7 +42,7 @@ describe('Test (de)serialize of instances of classes', () => {
       }
     }
     const b = new B(20)
-    const string = '{"_class":"B","_key":"","_value":{"n":20}}'
+    const string = '{"_class":"B","_value":{"n":20}}'
     const stringObj = JSON.parse(string)
 
     test(`should serialize an instance of a sub class`, () => {
@@ -77,7 +77,7 @@ describe('Test (de)serialize of instances of classes', () => {
       }
     }
     const c = new C(20)
-    const string = '{"_class":"C","_key":"","_value":{"_a":{"_class":"A","_key":"_a","_value":{"n":20}}}}'
+    const string = '{"_class":"C","_value":{"_a":{"_class":"A","_key":"_a","_value":{"n":20}}}}'
     const stringObj = JSON.parse(string)
 
     test(`should serialize an instance with a nested object instance`, () => {

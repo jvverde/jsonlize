@@ -1,4 +1,4 @@
-const { serialize, deserialize } = require('./index')
+const { serialize, deserialize } = require('../index')
 
 describe('Test (de)serialize of prototype objects', () => {
   function A(n = 1) {

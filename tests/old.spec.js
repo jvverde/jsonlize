@@ -12,23 +12,22 @@ describe('Test (de)serialize of instances of javascript objects', () => {
       'Boolean Object' : new Boolean(random.boolean()),
       'literal Boolean': !random.boolean(),
       'Number Object' : new Number(random.number()),
-      'literal Number': 0 | new Number(random.number()),
+      'literal Number': 0 | random.number(),
       'String Object' : new String(lorem.paragraphs()),
-      'literal String' : `${lorem.paragraphs()}`,
+      'literal String' : '' + lorem.paragraphs(),
       'Date' : new Date(),
       'BigInt' : BigInt(random.hexaDecimal(64)),
       'ReExp' :  /^$/igsm,
-      'empty literal array': [],
-      'literal array' : array,
-      'empty Array' : new Array,
-      'Array with empty values' : new Array(5),
-      'Array' : new Array(...array),
-      'empty literal Object' : {},
-      'literal Object' : obj,
       'empty Object' : new Object,
-      'Object' : new Object(obj),
-       'empty Set': new Set(),
+      'empty literal Object' : {},
+      'empty Array' : new Array,
+      'empty literal array' : [],
+      'empty Set': new Set(),
       'empty Map': new Map(),
+      'Object' : new Object(obj),
+      'literal Object' : obj,
+      'Array' : new Array(...array),
+      'literal array' : array,
       'Set': new Set(set),
       'Map': new Map(map)
     }
@@ -39,18 +38,57 @@ describe('Test (de)serialize of instances of javascript objects', () => {
         expect(result).toStrictEqual(v)
       })
     }
-    const fntests = {
-      'literal anonymous function': function (){},
-      'literal named function': function f(){},
-      'Arrow function' : () => null,
-      'Function': new Function()
+  })
+  describe('Test class instances', () => {
+    class A {}
+    class B extends A {}
+    const tests = {
+      'Class empty' : new A,
+      'Sub Class' : new B
     }
-    for (const [k, v] of Object.entries(fntests)) {
+    for (const [k, v] of Object.entries(tests)) {
       test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
         const json = serialize(v)
+        const result = deserialize(json, v.constructor)
+        expect(result).toStrictEqual(v)
+      })
+      test(`Deserialize (WITHOUT class identification) of a serialized ${k} (${v}) should be equal to literal object`, () => {
+        const json = serialize(v)
         const result = deserialize(json)
-        const cond = isClone(result, v, {strictly: false})
-        expect(cond).toBe(true)
+        const obj = Object.create(v)
+        expect(result).toEqual(obj)
+      })
+    }
+  })
+  describe('More', () => {
+    class A {}
+    class B extends A {}
+    for (let cnt = 1; cnt-->0; ){
+      // --------------------------
+      const re = /^[a-f]{3,}$/igsm
+      test(`Deserialize of a serialized of Regex (${re}) should be also a re`, () => {
+        const json = serialize(re)
+        const result = deserialize(json)
+        expect(result.test('abcd')).toBe(true)
+        expect(result.test('1234\nabcd')).toBe(true)
+      })
+      const date = new Date()
+      test(`Deserialize of a serialized of date object (${date}) should have Date's methods`, () => {
+        const json = serialize(date)
+        const result = deserialize(json)
+        expect(() => {
+          result.getTime()
+          result.getUTCDate()
+          result.toLocaleString()
+          result.toTimeString()
+        }).not.toThrow();
+      })
+      const f = (a) => a*a*a
+      test(`Deserialize of a serialized of function should be Function`, () => {
+        const json = serialize(f)
+        const g = deserialize(json)
+        const pow = g(4)
+        expect(pow).toBe(4*4*4)
       })
     }
   })
@@ -66,7 +104,7 @@ describe('Test (de)serialize of instances of javascript objects', () => {
     })
     const bigtypes = [BigInt64Array, BigUint64Array]
     bigtypes.forEach(type => {
-      const array = new type([1n, 2n, BigInt(random.hexaDecimal(128))])
+      const array = new type([1n, 2n, 3n])
       test(`Deserialize of a serialized ${array.constructor.name} should be equal`, () => {
         const json = serialize(array)
         const array2 = deserialize(json)
