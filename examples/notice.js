@@ -43,7 +43,7 @@ const showArray = (array) => {
   console.log('...array.values:', ...array.values())
   console.log('Object.keys(array:)', Object.keys(array))
   console.log('Object.getOwnPropertyNames(array):', Object.getOwnPropertyNames(array))
-
+  console.log('Object.getOwnPropertyDescriptors(array):', Object.getOwnPropertyDescriptors(array))
 }
 
 console.log('----Array(5)----')
@@ -59,8 +59,65 @@ console.log('----Array(5) and one element set ----')
   showArray(array)
 })(new Array(5))
 
+console.log('----Array(5) with a prop ----')
 ;(function (array) {
   array.label = 'label'
   showArray(array)
 })(new Array(5))
 
+console.log('----sub class of Array ----')
+function Myarrays (...args) {
+  class S extends Array{
+    tag = 'S'
+    obj = {
+      i: 3,
+      j:4
+    }
+    constructor(...args) {
+      super(...args)
+    }
+    get valor() { return this }
+  }
+  const s = new S(...args)
+  s.label = 'label'
+  showArray(s)
+}
+Myarrays(5)
+
+
+// console.log('---- date with a label ----')
+// const date = new Date
+// date.label = 'label'
+// console.log(Object.getOwnPropertyDescriptors(date))
+// console.log(Object.getPrototypeOf(date))
+
+// console.log('---- Number extended with a label ----')
+// function showobj(type, value){
+//   function create() {
+//     return class D extends type{
+//       static type = 'String'
+//       label = 'label'
+//       constructor(s){
+//         super(s)
+//       }
+//       get valor() {return this}
+//     }
+//   }
+//   const X = create()
+//   const n = new X(value)
+//   n.name = 'myobjname'
+//   n.label = 'tag'
+
+//   console.log('valor', 0 + n.valor)
+//   console.log(Object.getOwnPropertyDescriptors(n))
+//   const p = Object.getPrototypeOf(n)
+//   console.log(p)
+//   console.log('proto:', Object.getOwnPropertyDescriptors(p))
+//   console.log('constructor:', Object.getOwnPropertyDescriptors(p).constructor.value.toString())
+//   console.log('constructor:', p.constructor.toString())
+
+// }
+
+// showobj(Number, 3)
+// showobj(String, '3')
+// showobj(Date, new Date)
