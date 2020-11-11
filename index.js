@@ -60,6 +60,25 @@ const weirdTypes = {
   BigInt64Array: v => Array.from(v).map(e => replacer(e))
 }
 
+const repdesc = (descriptors, _class) => {
+  console.log('repdesc class', _class)
+  const newdescs = descriptors
+  if (descriptors.value) newdescs.value = replacer(descriptors.value)
+  return newdescs
+}
+
+const repproto = (obj) => {
+  const prototype = Object.getPrototypeOf(obj)
+  //console.log('proto', prototype)
+  //console.log('constructor', obj.constructor)
+  console.log('repproto constructor.name', obj.constructor.name)
+  if(prototype === null || obj.constructor.name === "Object" || obj.constructor.name === 'Array') {
+    console.log('repproto return prototype', prototype)
+    return prototype
+  }
+  console.log('repproto return prototype replacer', replacer(prototype))
+  return replacer(prototype)
+}
 
 const replacer = (obj) => {
   // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
@@ -69,19 +88,30 @@ const replacer = (obj) => {
     && (!basicTypes.includes(obj.constructor) || obj instanceof Object)
   ) {
     const _class = obj.constructor.name
-    let _value
+    let _value, _descriptors, _prototype
     if (obj instanceof Array) {
-      _value = obj.map(v => replacer(v))
+      // _value = obj.map(v => replacer(v))
+      _value = ''
+      const descriptors = Object.getOwnPropertyDescriptors(obj)
+      if (_class !== 'Array' && _class !== 'Object') _descriptors = repdesc(descriptors, _class)
+      if (_class !== 'Array' && _class !== 'Object') _prototype = repproto(obj)
     } else if (weirdTypes[_class]) {
       //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
       _value = weirdTypes[_class](obj)
     } else if (builtinTypes[_class]) {
       _value =  obj
     } else {
-      _value = modify(Object.assign({}, obj))
+      // _value = modify(Object.assign({}, obj))
+      //console.log('obj', obj)
+      const descriptors = Object.getOwnPropertyDescriptors(obj)
+      //console.log('descriptors', descriptors)
+      if (_class !== 'Array' && _class !== 'Object') _descriptors = repdesc(descriptors, _class)
+      if (_class !== 'Array' && _class !== 'Object') _prototype = repproto(obj)
     }
     return {
       _class,
+      _descriptors,
+      _prototype,
       _value
     }
   } else if(obj === undefined) {
@@ -118,7 +148,11 @@ const reconstruct = (obj, ...classes) => {
     // console.log('obj', typeof obj, obj)
     if(obj && obj instanceof Object && obj._class && typeof obj._class === 'string' && obj._value !== undefined) {
       if (obj._class === 'Array') {
-        return Object.keys(obj._value).map(k => compose(obj._value[k]))
+        //return Object.keys(obj._value).map(k => compose(obj._value[k]))
+        const descriptors = compose(obj._descriptors)
+        const prototype = compose(obj._prototype)
+        const newobj = Object.create(prototype || {}, descriptors)
+        return newobj
       } else if (lookup[obj._class]) { // check if it is a user defined class
         const prototype = lookup[obj._class]
         const children = compose(obj._value)
@@ -127,12 +161,16 @@ const reconstruct = (obj, ...classes) => {
       } else if (builtinTypes[obj._class]) { // check if it is builtin javascript object
         return builtinTypes[obj._class](obj._value, compose)
       } else {
-        const children = compose(obj._value)
-        const descriptors = Object.getOwnPropertyDescriptors(children)
-        return Object.create({}, descriptors)
+        // const children = compose(obj._value)
+        // const descriptors = Object.getOwnPropertyDescriptors(children)
+        // return Object.create({}, descriptors)
+        const descriptors = compose(obj._descriptors)
+        const prototype = compose(obj._prototype)
+        const newobj = Object.create(prototype || {}, descriptors)
+        return newobj
       }
     } else if(obj && obj instanceof Object && obj._class === 'undefined') {
-      console.log('undefined')
+      console.log('undefined case')
       return undefined
     } else if(obj && obj instanceof Object) {
       const newobj = new Object()
