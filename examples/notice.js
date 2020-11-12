@@ -176,6 +176,14 @@ serdes(3n)
 serdes(new Set)
 serdes(new Map)
 serdes(new Set([{i:2},{i:2}]))
+class INT extends Number{
+  constructor(i = 0) {
+    super(i)
+    this.label = 'int'
+  }
+  get tag() { return label }
+}
+serdes(new INT(3))
 // console.log('---- date with a label ----')
 // const date = new Date
 // date.label = 'label'

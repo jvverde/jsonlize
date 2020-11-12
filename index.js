@@ -60,16 +60,13 @@ const weirdTypes = {
   BigInt64Array: v => Array.from(v).map(e => replacer(e))
 }
 
-const repdesc = (descriptors = {}, _class) => {
-  // console.log('repdesc class', _class, descriptors)
-  const newdesc = {}
-  Object.entries(descriptors).forEach(([name, desc]) => {
+const repdesc = (descriptors) => {
+  Object.entries(descriptors || {}).forEach(([name, desc]) => {
     if ('value' in desc) {
       desc.value = replacer(desc.value)
     }
-    newdesc[name] = desc
   })
-  return newdesc
+  return descriptors
 }
 
 const replacer = (obj) => {
@@ -94,12 +91,12 @@ const replacer = (obj) => {
     } else if(obj.constructor === Array || obj.constructor === Object) {
       return {
         _class,
-        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj), _class)
+        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj))
       }
     } else {
       return {
         _class,
-        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj), _class),
+        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj)),
         _prototype: replacer(Object.getPrototypeOf(obj))
       }
     }
@@ -107,63 +104,7 @@ const replacer = (obj) => {
     return obj
   }
   console.log('YOU SHOULD NOT BE HERE')
-  // Old
-  if (obj && obj.constructor && obj.constructor.name
-    // don't replace if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
-    && (!basicTypes.includes(obj.constructor) || obj instanceof Object)
-  ) {
-    const _class = obj.constructor.name
-    let _value, _descriptors, _prototype
-    if (obj instanceof Array) {
-      // _value = obj.map(v => replacer(v))
-      _value = ''
-      const descriptors = Object.getOwnPropertyDescriptors(obj)
-      if (_class !== 'Array' && _class !== 'Object') _descriptors = repdesc(descriptors, _class)
-      if (_class !== 'Array' && _class !== 'Object') _prototype = repproto(obj)
-    } else if (weirdTypes[_class]) {
-      //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
-      _value = weirdTypes[_class](obj)
-    } else if (builtinTypes[_class]) {
-      _value =  obj
-    } else {
-      // _value = modify(Object.assign({}, obj))
-      //console.log('obj', obj)
-      const descriptors = Object.getOwnPropertyDescriptors(obj)
-      //console.log('descriptors', descriptors)
-      if (_class !== 'Array' && _class !== 'Object') _descriptors = repdesc(descriptors, _class)
-      if (_class !== 'Array' && _class !== 'Object') _prototype = repproto(obj)
-    }
-    return {
-      _class,
-      _descriptors,
-      _prototype,
-      _value
-    }
-  } else if(obj === undefined) {
-    return {
-      _class: 'undefined'
-    }
-  }
-  return obj
 }
-
-const modify = (obj) => {
-  if (obj && obj instanceof Object) {
-    const keys = Object.keys(obj)
-    const newobj = {}
-    keys.forEach(k => {
-      newobj[k] = replacer(obj[k])
-    })
-    return newobj
-  } else if (obj && obj.constructor && !basicTypes.includes(obj.constructor) && obj.constructor.name) {
-    console.log('Special case for', obj, obj.constructor)
-    return replacer(obj)
-  } else {
-    console.log('Do nothing for', obj)
-  }
-  return obj
-}
-
 
 const reconstruct = (obj, ...classes) => {
   const lookup = {}
