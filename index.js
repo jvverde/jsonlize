@@ -60,29 +60,54 @@ const weirdTypes = {
   BigInt64Array: v => Array.from(v).map(e => replacer(e))
 }
 
-const repdesc = (descriptors, _class) => {
-  console.log('repdesc class', _class)
-  const newdescs = descriptors
-  if (descriptors.value) newdescs.value = replacer(descriptors.value)
-  return newdescs
-}
-
-const repproto = (obj) => {
-  const prototype = Object.getPrototypeOf(obj)
-  //console.log('proto', prototype)
-  //console.log('constructor', obj.constructor)
-  console.log('repproto constructor.name', obj.constructor.name)
-  if(prototype === null || obj.constructor.name === "Object" || obj.constructor.name === 'Array') {
-    console.log('repproto return prototype', prototype)
-    return prototype
-  }
-  console.log('repproto return prototype replacer', replacer(prototype))
-  return replacer(prototype)
+const repdesc = (descriptors = {}, _class) => {
+  // console.log('repdesc class', _class, descriptors)
+  const newdesc = {}
+  Object.entries(descriptors).forEach(([name, desc]) => {
+    if ('value' in desc) {
+      desc.value = replacer(desc.value)
+    }
+    newdesc[name] = desc
+  })
+  return newdesc
 }
 
 const replacer = (obj) => {
+  if (obj === undefined) { return { _class: 'undefined' } }
   // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
   // Change from above test as it reveals the BigInt is not an Object!!!
+  if (obj && obj.constructor && obj.constructor.name
+    // don't replace if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
+    && (!basicTypes.includes(obj.constructor) || obj instanceof Object)){
+    const _class = obj.constructor.name
+    if (weirdTypes[_class]) {
+      //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
+      return {
+        _class,
+        _value: weirdTypes[_class](obj)
+      }
+    } else if (builtinTypes[_class]) {
+      return {
+        _class,
+        _value: obj
+      }
+    } else if(obj.constructor === Array || obj.constructor === Object) {
+      return {
+        _class,
+        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj), _class)
+      }
+    } else {
+      return {
+        _class,
+        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj), _class),
+        _prototype: replacer(Object.getPrototypeOf(obj))
+      }
+    }
+  } else {
+    return obj
+  }
+  console.log('YOU SHOULD NOT BE HERE')
+  // Old
   if (obj && obj.constructor && obj.constructor.name
     // don't replace if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
     && (!basicTypes.includes(obj.constructor) || obj instanceof Object)

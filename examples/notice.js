@@ -128,28 +128,54 @@ function test(obj) {
   return newobj
 }
 
-test([])
-test(new Array(5))
-const t = new Array(5)
-t[3] = 3
-test(test(t))
-const e = []
-e.label = 'label'
-test(e)
-test({})
-test({i:3})
-function A(){}
-test(new A())
-function make(){
-  function B(n = 0){
-    this.i = n
-    this.j++
-    console.log(this.j)
-  }
-  return new B()
-}
-test(make())
+// test([])
+// test(new Array(5))
+// const t = new Array(5)
+// t[3] = 3
+// test(test(t))
+// const e = []
+// e.label = 'label'
+// test(e)
+// test({})
+// test({i:3})
+// function A(){}
+// test(new A())
+// function make(){
+//   function B(n = 0){
+//     this.i = n
+//     this.j++
+//     console.log(this.j)
+//   }
+//   return new B()
+// }
+// test(make())
 
+function serdes(obj){
+  console.log('obj:', obj)
+  const s = serialize(obj)
+  console.log('serialize', s)
+  console.log('-------------------')
+}
+
+serdes()
+serdes(undefined)
+serdes(null)
+serdes(1)
+serdes('a')
+serdes({})
+serdes([])
+serdes({i:1})
+serdes([1])
+serdes({j:[]})
+serdes([{}])
+serdes({k:[1]})
+serdes([{k:1}])
+serdes(new Date)
+serdes(/^$/igsm)
+serdes(3n)
+serdes(new Set)
+serdes(new Map)
+serdes(new Set([{i:2},{i:2}]))
 // console.log('---- date with a label ----')
 // const date = new Date
 // date.label = 'label'
