@@ -110,6 +110,14 @@ const reconstruct = (obj, ...classes) => {
   const lookup = {}
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
+  function compdesc (descriptors) {
+    Object.entries(descriptors || {}).forEach(([name, desc]) => {
+      if ('value' in desc) {
+        desc.value = compose(desc.value)
+      }
+    })
+    return descriptors
+  }
   function compose (obj) {
     if (obj && obj._class === 'undefined') { return undefined }
     else if (obj && obj._class && typeof obj._class === 'string') {
@@ -118,14 +126,17 @@ const reconstruct = (obj, ...classes) => {
       } else if (obj._descriptors) {
         if (obj._class === 'Array') {
           const prototype = Object.getPrototypeOf([])
-          return Object.create(prototype, compose(obj._descriptors))
+          const descriptors = compdesc(obj._descriptors)
+          return Object.create(prototype, descriptors)
         } else if (obj._class === 'Object') {
           const prototype = Object.getPrototypeOf({})
-          return Object.create(prototype, compose(obj._descriptors))
+          const descriptors = compdesc(obj._descriptors)
+          return Object.create(prototype, descriptors)
         } else if (obj._prototype) {
           const proto = compose(obj._prototype)
           const prototype = Object.getPrototypeOf(proto)
-          return Object.create(prototype, compose(obj._descriptors))
+          const descriptors = compdesc(obj._descriptors)
+          return Object.create(prototype, descriptors)
         } else {
           console.log("SHOULDN't HAPPEN EITHER")
         }
@@ -134,42 +145,12 @@ const reconstruct = (obj, ...classes) => {
       }
     }
     return obj
-    // console.log('obj', typeof obj, obj)
-    if(obj && obj instanceof Object && obj._class && typeof obj._class === 'string' && obj._value !== undefined) {
-      if (obj._class === 'Array') {
-        //return Object.keys(obj._value).map(k => compose(obj._value[k]))
-        const descriptors = compose(obj._descriptors)
-        const prototype = compose(obj._prototype)
-        const newobj = Object.create(prototype || {}, descriptors)
-        return newobj
-      } else if (lookup[obj._class]) { // check if it is a user defined class
-        const prototype = lookup[obj._class]
-        const children = compose(obj._value)
-        const descriptors = Object.getOwnPropertyDescriptors(children)
-        return Object.create(prototype, descriptors)
-      } else if (builtinTypes[obj._class]) { // check if it is builtin javascript object
-        return builtinTypes[obj._class](obj._value, compose)
-      } else {
-        // const children = compose(obj._value)
-        // const descriptors = Object.getOwnPropertyDescriptors(children)
-        // return Object.create({}, descriptors)
-        const descriptors = compose(obj._descriptors)
-        const prototype = compose(obj._prototype)
-        const newobj = Object.create(prototype || {}, descriptors)
-        return newobj
-      }
-    } else if(obj && obj instanceof Object && obj._class === 'undefined') {
-      console.log('undefined case')
-      return undefined
-    } else if(obj && obj instanceof Object) {
-      const newobj = new Object()
-      for (i in obj) {
-        newobj[i] = compose(obj[i])
-      }
-      return newobj
-    }
-    // if it is not an object return as is
-    return obj
+      // if (lookup[obj._class]) { // check if it is a user defined class
+      //  const prototype = lookup[obj._class]
+      //  const children = compose(obj._value)
+      //  const descriptors = Object.getOwnPropertyDescriptors(children)
+      //  return Object.create(prototype, descriptors)
+      //}
   }
   return compose(obj)
 }

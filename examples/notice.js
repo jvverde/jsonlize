@@ -156,7 +156,9 @@ function serdes(obj){
   console.log('serialize', s)
   const newobj = deserialize(s)
   console.log('newobj:', newobj)
+  console.log('isClone:', isClone(obj, newobj))
   console.log('-------------------')
+  return newobj
 }
 
 serdes()
@@ -183,9 +185,11 @@ class INT extends Number{
     super(i)
     this.label = 'int'
   }
-  get tag() { return label }
+  get tag() { return this.label }
 }
-// serdes(new INT(3))
+const t = serdes(new INT(3))
+console.log(t.tag)
+console.log(Object.getPrototypeOf(3))
 // console.log('---- date with a label ----')
 // const date = new Date
 // date.label = 'label'
