@@ -111,6 +111,29 @@ const reconstruct = (obj, ...classes) => {
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
   function compose (obj) {
+    if (obj && obj._class === 'undefined') { return undefined }
+    else if (obj && obj._class && typeof obj._class === 'string') {
+      if (obj._value !== undefined && builtinTypes[obj._class]) {
+        return builtinTypes[obj._class](obj._value, compose)
+      } else if (obj._descriptors) {
+        if (obj._class === 'Array') {
+          const prototype = Object.getPrototypeOf([])
+          return Object.create(prototype, compose(obj._descriptors))
+        } else if (obj._class === 'Object') {
+          const prototype = Object.getPrototypeOf({})
+          return Object.create(prototype, compose(obj._descriptors))
+        } else if (obj._prototype) {
+          const proto = compose(obj._prototype)
+          const prototype = Object.getPrototypeOf(proto)
+          return Object.create(prototype, compose(obj._descriptors))
+        } else {
+          console.log("SHOULDN't HAPPEN EITHER")
+        }
+      } else {
+        console.log("SHOULDN't HAPPEN")
+      }
+    }
+    return obj
     // console.log('obj', typeof obj, obj)
     if(obj && obj instanceof Object && obj._class && typeof obj._class === 'string' && obj._value !== undefined) {
       if (obj._class === 'Array') {

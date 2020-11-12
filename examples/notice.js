@@ -154,6 +154,8 @@ function serdes(obj){
   console.log('obj:', obj)
   const s = serialize(obj)
   console.log('serialize', s)
+  const newobj = deserialize(s)
+  console.log('newobj:', newobj)
   console.log('-------------------')
 }
 
@@ -183,7 +185,7 @@ class INT extends Number{
   }
   get tag() { return label }
 }
-serdes(new INT(3))
+// serdes(new INT(3))
 // console.log('---- date with a label ----')
 // const date = new Date
 // date.label = 'label'
