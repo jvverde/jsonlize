@@ -134,9 +134,18 @@ const reconstruct = (obj, ...classes) => {
           return Object.create(prototype, descriptors)
         } else if (obj._prototype) {
           const proto = compose(obj._prototype)
-          const prototype = Object.getPrototypeOf(proto)
+          // console.log('proto=>', proto)
+          // console.log('proto.constructor=>', proto.constructor)
+          // console.log('proto.constructor.name=>', proto.constructor.name)
+          const parent = new proto.constructor()
+          // console.log('parent', parent)
+          const prototype = Object.getPrototypeOf(parent)
+          // console.log('prototype=>', prototype)
           const descriptors = compdesc(obj._descriptors)
-          return Object.create(prototype, descriptors)
+          // console.log('descriptors=>', descriptors)
+          const newobj = Object.create(prototype, descriptors)
+          // console.log('newobj=>', newobj)
+          return newobj
         } else {
           console.log("SHOULDN't HAPPEN EITHER")
         }
