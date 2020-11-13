@@ -150,48 +150,102 @@ function test(obj) {
 // }
 // test(make())
 
-function serdes(obj){
+function serdes(obj, debug = false, strictly = true){
   console.log('obj:', obj)
   const s = serialize(obj)
   console.log('serialize', s)
   const newobj = deserialize(s)
   console.log('newobj:', newobj)
-  console.log('isClone:', isClone(obj, newobj))
+  console.log('isClone:', isClone(obj, newobj, {debug, strictly}))
   console.log('-------------------')
   return newobj
 }
 
-// serdes()
-// serdes(undefined)
-// serdes(null)
-// serdes(1)
-// serdes('a')
-// serdes({})
-// serdes([])
-// serdes({i:1})
-// serdes([1])
-// serdes({j:[]})
-// serdes([{}])
-// serdes({k:[1]})
-// serdes([{k:1}])
-// serdes(new Date)
-// serdes(/^$/igsm)
-// serdes(3n)
-// serdes(new Set)
-// serdes(new Map)
-// serdes(new Set([{i:2},{i:2}]))
-class INT extends Number{
+/*serdes()
+serdes(undefined)
+serdes(null)
+serdes(1)
+serdes('a')
+serdes({})
+serdes([])
+serdes({i:1})
+serdes([1])
+serdes({j:[]})
+serdes([{}])
+serdes({k:[1]})
+serdes([{k:1}])
+serdes(new Date)
+serdes(/^$/igsm)
+serdes(3n)
+serdes(new Set)
+serdes(new Map)
+serdes(new Set([3,2,1]))
+serdes(new Set([{i:2},{i:2}]))*/
+class A{
+  constructor(n) {
+    this.n = n
+  }
+  get val() { return this.n }
+}
+//const a = new A(3)
+//const b = serdes(a, false, false)
+//console.log(a.val === b.val)
+//serdes(new Set([a]), false, false)
+
+
+/*const i = new Number(3)
+console.log(typeof 1)
+console.log(i.constructor)
+console.log(i.constructor.name)
+const p = Object.getPrototypeOf(i)
+console.log('p=', i)
+console.log('p.constructor=', p.constructor)
+console.log('p.constructor.name=', p.constructor.name)
+const d = Object.getOwnPropertyDescriptors(i)
+console.log('d=', d)*/
+class Int extends Number{
   constructor(i = 0) {
     super(i)
     this.label = 'int'
   }
   get tag() { return this.label }
+  get val() { return this }
 }
-const t = serdes(new INT(3))
-console.log(t.tag)
-console.log(Object.getPrototypeOf(3))
-console.log(Object.getPrototypeOf(t))
-console.log(Object.getPrototypeOf(new INT(3)))
+function showchain(obj) {
+  let sp=''
+  do {
+    console.log(sp, 'obj:', obj)
+    if (obj.valueOf instanceof Function) {
+      try {
+        console.log(sp, 'valueof=', obj.valueOf())
+      } catch (e) {
+        console.warn(e)
+      }
+    }
+    console.log(sp, 'typeof:', typeof obj)
+    console.log(sp, 'constructor:', obj.constructor)
+    console.log(sp, 'constructor.name:', obj.constructor.name)
+    console.log(sp, 'descriptors', Object.getOwnPropertyDescriptors(obj))
+    console.log(sp, '<<<<<<<<')
+    sp += '  '
+  } while(obj = Object.getPrototypeOf(obj))
+  console.log('>>>>>>>>')
+}
+
+//showchain({i:3})
+//showchain(new Number(3))
+showchain(new Date())
+//const t = serdes(n, true, false)
+// console.log(n.tag)
+// console.log(n.val)
+// console.log(n + 2)
+// console.log('+++++')
+// console.log(t.tag)
+// console.log(t.val)
+//console.log(t + 2)
+// console.log('+++++')
+// console.log(Object.getPrototypeOf(n))
+// console.log(Object.getPrototypeOf(t))
 // console.log('---- date with a label ----')
 // const date = new Date
 // date.label = 'label'

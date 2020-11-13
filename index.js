@@ -1,3 +1,4 @@
+const isClone = require('isClone')
 const basicTypes = [Number, String, Boolean]
 const builtinTypes = { // javascript builtin objects
   Date: v => new Date(v),
@@ -34,7 +35,13 @@ const builtinTypes = { // javascript builtin objects
 }
 
 const weirdTypes = {
-  Function: v => v.toString(),
+  Function: v => {
+    const string = v.toString()
+    if (string.indexOf('[native code]') > -1) {
+      return v.name
+    }
+    return string
+  },
   BigInt: v => v.toString(),
   Symbol: v => v.description,
   Error: v => {
@@ -60,13 +67,21 @@ const weirdTypes = {
   BigInt64Array: v => Array.from(v).map(e => replacer(e))
 }
 
+// Get descriptors of Object prototype
+const protodescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
+
 const repdesc = (descriptors) => {
-  Object.entries(descriptors || {}).forEach(([name, desc]) => {
-    if ('value' in desc) {
-      desc.value = replacer(desc.value)
-    }
-  })
-  return descriptors
+  const newdescs = {}
+  Object.entries(descriptors || {})
+    // discard descriptors of Object prototype
+    .filter(([name, desc]) => !isClone(desc, protodescriptors[name]))
+    .forEach(([name, desc]) => {
+      if ('value' in desc) {
+        desc.value = replacer(desc.value)
+      }
+      newdescs[name] = desc
+    })
+  return newdescs
 }
 
 const replacer = (obj) => {
@@ -103,7 +118,6 @@ const replacer = (obj) => {
   } else {
     return obj
   }
-  console.log('YOU SHOULD NOT BE HERE')
 }
 
 const reconstruct = (obj, ...classes) => {
@@ -134,23 +148,16 @@ const reconstruct = (obj, ...classes) => {
           return Object.create(prototype, descriptors)
         } else if (obj._prototype) {
           const proto = compose(obj._prototype)
-          // console.log('proto=>', proto)
-          // console.log('proto.constructor=>', proto.constructor)
-          // console.log('proto.constructor.name=>', proto.constructor.name)
-          const parent = new proto.constructor()
-          // console.log('parent', parent)
+          const parent = proto.constructor instanceof Function ? new proto.constructor() : proto
           const prototype = Object.getPrototypeOf(parent)
-          // console.log('prototype=>', prototype)
           const descriptors = compdesc(obj._descriptors)
-          // console.log('descriptors=>', descriptors)
           const newobj = Object.create(prototype, descriptors)
-          // console.log('newobj=>', newobj)
           return newobj
         } else {
-          console.log("SHOULDN't HAPPEN EITHER")
+          console.log("SHOULDN't HAPPEN")
         }
       } else {
-        console.log("SHOULDN't HAPPEN")
+        console.log("SHOULDN't HAPPEN EITHER")
       }
     }
     return obj
