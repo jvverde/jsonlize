@@ -234,7 +234,7 @@ function showchain(obj) {
 
 //showchain({i:3})
 //showchain(new Number(3))
-showchain(new Date())
+showchain(new Boolean())
 //const t = serdes(n, true, false)
 // console.log(n.tag)
 // console.log(n.val)
