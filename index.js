@@ -142,7 +142,7 @@ const replacer = (obj) => {
 const reconstruct = (obj, ...classes) => {
   const lookup = {}
   classes.forEach(c => { lookup[c.name] = c.prototype })
-
+  const map = new Map()
   function compdesc (descriptors) {
     Object.entries(descriptors || {}).forEach(([name, desc]) => {
       if ('value' in desc) {
@@ -152,40 +152,57 @@ const reconstruct = (obj, ...classes) => {
     return descriptors
   }
   function compose (obj) {
-    if (obj && obj._class === 'undefined') { return undefined }
-    else if (obj && obj._class && typeof obj._class === 'string') {
-      if (obj._value !== undefined && builtinTypes[obj._class]) {
-        return builtinTypes[obj._class](obj._value, compose)
-      } else if (obj._descriptors) {
-        if (obj._class === 'Array') {
-          const prototype = Object.getPrototypeOf([])
-          const descriptors = compdesc(obj._descriptors)
-          return Object.create(prototype, descriptors)
-        } else if (obj._class === 'Object') {
-          const prototype = Object.getPrototypeOf({})
-          const descriptors = compdesc(obj._descriptors)
-          return Object.create(prototype, descriptors)
-        } else if (obj._prototype) {
-          const proto = compose(obj._prototype)
-          const parent = proto.constructor instanceof Function ? new proto.constructor() : proto
-          const prototype = Object.getPrototypeOf(parent)
-          const descriptors = compdesc(obj._descriptors)
-          const newobj = Object.create(prototype, descriptors)
-          return newobj
+    try {
+      if (obj && obj._class === 'undefined') { return undefined }
+      else if (obj && obj._class && typeof obj._class === 'string') {
+        if (obj._descriptors) {
+          if (obj._class === 'Array') {
+            const prototype = Object.getPrototypeOf([])
+            const descriptors = compdesc(obj._descriptors)
+            return Object.create(prototype, descriptors)
+          } else if (obj._class === 'Object') {
+            const prototype = Object.getPrototypeOf({})
+            const descriptors = compdesc(obj._descriptors)
+            return Object.create(prototype, descriptors)
+          } else if (obj._prototype) {
+            const proto = compose(obj._prototype)
+            const parent = proto.constructor instanceof Function ? new proto.constructor() : proto
+            const prototype = Object.getPrototypeOf(parent)
+            const descriptors = compdesc(obj._descriptors)
+            const newobj = Object.create(prototype, descriptors)
+            return newobj
+          } else {
+            console.log("SHOULDN't HAPPEN")
+          }
+        } else if (obj._value !== undefined && builtinTypes[obj._class]) {
+          const value = builtinTypes[obj._class](obj._value, compose)
+          if (obj._class === 'Function' && value.name) {
+            console.log('obj._class', obj._class)
+            console.log('obj._value', obj._value)
+            if (map.has(value.name)) {
+              map.get(value.name).push(global[value.name])
+            } else {
+              map.set(value.name, [global[value.name]])
+            }
+            global[value.name] = value
+            console.log('global[value.name]', global[value.name])
+            console.log('map', map)
+          }
+          return value
         } else {
-          console.log("SHOULDN't HAPPEN")
+          console.log("SHOULDN't HAPPEN EITHER")
         }
-      } else {
-        console.log("SHOULDN't HAPPEN EITHER")
       }
+      return obj
+        // if (lookup[obj._class]) { // check if it is a user defined class
+        //  const prototype = lookup[obj._class]
+        //  const children = compose(obj._value)
+        //  const descriptors = Object.getOwnPropertyDescriptors(children)
+        //  return Object.create(prototype, descriptors)
+        //}
+    } catch (e) {
+      console.warn(e)
     }
-    return obj
-      // if (lookup[obj._class]) { // check if it is a user defined class
-      //  const prototype = lookup[obj._class]
-      //  const children = compose(obj._value)
-      //  const descriptors = Object.getOwnPropertyDescriptors(children)
-      //  return Object.create(prototype, descriptors)
-      //}
   }
   return compose(obj)
 }
