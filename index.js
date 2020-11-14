@@ -1,21 +1,21 @@
 const isClone = require('isClone')
 const basicTypes = [Number, String, Boolean]
 const builtinTypes = { // javascript builtin objects
-  Date: v => new Date(v),
   Number: v => new Number(v),
   String: v => new String(v),
   Boolean: v => new Boolean(v),
+  Date: v => new Date(v),
   BigInt: v => BigInt(v),
+  RegExp: v => {
+    const exp = new RegExp(v.source, v.flags)
+    if (v.lastIndex) exp.lastIndex = v.lastIndex
+    return exp
+  },
   Symbol: v => Symbol(v),
   Error: v => {
     const err = new Error(v.message || '')
     if (v.name) err.name = v.name
     return err
-  },
-  RegExp: v => {
-    const exp = new RegExp(v.source, v.flags)
-    if (v.lastIndex) exp.lastIndex = v.lastIndex
-    return exp
   },
   Set: (v, compose) => new Set(v.map(e => compose(e))),
   Map: (v, compose) => new Map(v.map(e => compose(e))),
@@ -84,6 +84,23 @@ const repdesc = (descriptors) => {
   return newdescs
 }
 
+function isInstanceOf(obj, type) {
+  while (obj) {
+    if (obj.constructor && obj.constructor.name === type ) return true
+    obj = Object.getPrototypeOf(obj)
+  }
+  return false
+}
+const btypes = Object.keys(builtinTypes)
+function getValue(obj) {
+  try {
+    for(const T of btypes) {
+      if (isInstanceOf(obj, T)) return builtinTypes[T](obj)
+    }
+  } catch (e) {}
+  console.log('Not a base type for', obj)
+  return undefined
+}
 const replacer = (obj) => {
   if (obj === undefined) { return { _class: 'undefined' } }
   // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
@@ -107,10 +124,12 @@ const replacer = (obj) => {
       return {
         _class,
         _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj))
+        // _value: getValue(obj)
       }
     } else {
       return {
         _class,
+        _value: getValue(obj),
         _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj)),
         _prototype: replacer(Object.getPrototypeOf(obj))
       }

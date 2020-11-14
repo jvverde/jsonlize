@@ -187,8 +187,8 @@ class A{
   }
   get val() { return this.n }
 }
-//const a = new A(3)
-//const b = serdes(a, false, false)
+// const a = new A(3)
+// const b = serdes(a, false, false)
 //console.log(a.val === b.val)
 //serdes(new Set([a]), false, false)
 
@@ -204,23 +204,61 @@ console.log('p.constructor.name=', p.constructor.name)
 const d = Object.getOwnPropertyDescriptors(i)
 console.log('d=', d)*/
 class Int extends Number{
+  // static cnt = 0
+  // j = 2
   constructor(i = 0) {
     super(i)
     this.label = 'int'
   }
   get tag() { return this.label }
   get val() { return this }
+  // setval(v) {
+  //  this.i +  v
+  //}
 }
+class Long extends Int{
+  constructor(i = 5) {
+    super(i)
+    this.cnt = 2*i
+  }
+  get long() { return this.i}
+}
+
+//serdes(new Int(3))
+serdes(new Long(3))
+//const n = new Number(5)
+//const i = new Int(3)
+//const l = new Long(3333333333333333333)
+//const set = new Set([1,true,{i:0},[3]])
+//console.log(set.valueOf())
+class Sset extends Set{
+  constructor(s){
+    super(s)
+    this.label = 'set'
+  }
+}
+//const sset = new Sset([1,2])
+//console.log(sset)
+//console.log(new Set(sset))
+//const r = Object.assign(i, n)
+//const s = Object.assign(n, i)
+//console.log(r)
+//console.log(new Number(l))
+//console.log(Object.assign(l, {k:89}, new Int(45)))
+
 function showchain(obj) {
   let sp=''
   do {
     console.log(sp, 'obj:', obj)
-    if (obj.valueOf instanceof Function) {
-      try {
+    try {
+      if (obj.valueOf instanceof Function) {
         console.log(sp, 'valueof=', obj.valueOf())
-      } catch (e) {
-        console.warn(e)
       }
+      if (obj.toString instanceof Function) {
+        console.log(sp, 'toString=', obj.toString())
+      }
+    } catch (e) {
+      console.warn(e)
     }
     console.log(sp, 'typeof:', typeof obj)
     console.log(sp, 'constructor:', obj.constructor)
@@ -232,9 +270,10 @@ function showchain(obj) {
   console.log('>>>>>>>>')
 }
 
+// showchain(new Int(3))
 //showchain({i:3})
 //showchain(new Number(3))
-showchain(new Boolean())
+//showchain([1])
 //const t = serdes(n, true, false)
 // console.log(n.tag)
 // console.log(n.val)
