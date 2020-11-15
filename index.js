@@ -95,11 +95,14 @@ const btypes = Object.keys(builtinTypes)
 function getValue(obj) {
   try {
     for(const T of btypes) {
-      if (isInstanceOf(obj, T)) return builtinTypes[T](obj)
+      if (isInstanceOf(obj, T)) return {
+        _value: builtinTypes[T](obj),
+        _type: T
+      }
     }
   } catch (e) {}
   console.log('Not a base type for', obj)
-  return undefined
+  return {}
 }
 const replacer = (obj) => {
   if (obj === undefined) { return { _class: 'undefined' } }
@@ -127,9 +130,11 @@ const replacer = (obj) => {
         // _value: getValue(obj)
       }
     } else {
+      const { _value, _type } = getValue(obj) || {}
       return {
         _class,
-        _value: getValue(obj),
+        _value,
+        _type,
         _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj)),
         _prototype: replacer(Object.getPrototypeOf(obj))
       }
@@ -170,6 +175,10 @@ const reconstruct = (obj, ...classes) => {
             const prototype = Object.getPrototypeOf(parent)
             const descriptors = compdesc(obj._descriptors)
             const newobj = Object.create(prototype, descriptors)
+            if (obj._value !== undefined && obj._type && builtinTypes[obj._type]) {
+              const base = builtinTypes[obj._type](obj._value)
+              return Object.assign(base, newobj)
+            }
             return newobj
           } else {
             console.log("SHOULDN't HAPPEN")
@@ -184,7 +193,7 @@ const reconstruct = (obj, ...classes) => {
             } else {
               map.set(value.name, [global[value.name]])
             }
-            global[value.name] = value
+             global[value.name] = value
             console.log('global[value.name]', global[value.name])
             console.log('map', map)
           }
