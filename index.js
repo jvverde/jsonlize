@@ -177,7 +177,7 @@ const reconstruct = (obj, ...classes) => {
             const newobj = Object.create(prototype, descriptors)
             if (obj._value !== undefined && obj._type && builtinTypes[obj._type]) {
               //const base = builtinTypes[obj._type](obj._value)
-              const base = newobj.constructor(obj._value)
+              const base = new newobj.constructor(obj._value)
               return Object.assign(base, newobj)
             }
             return newobj

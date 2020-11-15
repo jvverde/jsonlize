@@ -221,12 +221,12 @@ class Long extends Int{
     super(i)
     this.cnt = 2*i
   }
-  get long() { return 'L' + this.i}
+  get long() { return this}
 }
 
 //serdes(new Int(3))
-const r = serdes(new Long(3))
-console.log(r.long)
+const r = serdes(new Long(3), true, false)
+console.log(0 + r.long)
 //const f = new Function('return class I extends Number{}')
 //console.log(f)
 //console.log(f.name)
@@ -279,6 +279,7 @@ function showchain(obj) {
   console.log('>>>>>>>>')
 }
 
+// showchain(new Int(3))
 // showchain(new Int(3))
 //showchain({i:3})
 //showchain(new Number(3))
