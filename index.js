@@ -176,7 +176,8 @@ const reconstruct = (obj, ...classes) => {
             const descriptors = compdesc(obj._descriptors)
             const newobj = Object.create(prototype, descriptors)
             if (obj._value !== undefined && obj._type && builtinTypes[obj._type]) {
-              const base = builtinTypes[obj._type](obj._value)
+              //const base = builtinTypes[obj._type](obj._value)
+              const base = newobj.constructor(obj._value)
               return Object.assign(base, newobj)
             }
             return newobj
@@ -193,7 +194,7 @@ const reconstruct = (obj, ...classes) => {
             } else {
               map.set(value.name, [global[value.name]])
             }
-             global[value.name] = value
+            global[value.name] = value
             console.log('global[value.name]', global[value.name])
             console.log('map', map)
           }
