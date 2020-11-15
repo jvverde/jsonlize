@@ -224,9 +224,9 @@ class Long extends Int{
   get long() { return this}
 }
 
-//serdes(new Int(3))
-const r = serdes(new Long(3), true, false)
-console.log(0 + r.long)
+serdes(new Int(3), false, false)
+const r = serdes(new Long(3), false, false)
+r.long
 //const f = new Function('return class I extends Number{}')
 //console.log(f)
 //console.log(f.name)

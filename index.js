@@ -52,8 +52,8 @@ const weirdTypes = {
     const { source, flags, lastIndex } = v
     return { source, flags, lastIndex }
   },
-  Set: v => [...v].map(v => replacer(v)),
-  Map: v => [...v].map(v => replacer(v)),
+  Set: v => [...v].map(v => decompose(v)),
+  Map: v => [...v].map(v => decompose(v)),
   Int8Array: v => Array.from(v),
   Uint8Array: v => Array.from(v),
   Int16Array: v => Array.from(v),
@@ -63,57 +63,51 @@ const weirdTypes = {
   Float32Array: v => Array.from(v),
   Float64Array: v => Array.from(v),
   Uint8ClampedArray: v => Array.from(v),
-  BigUint64Array: v => Array.from(v).map(e => replacer(e)),
-  BigInt64Array: v => Array.from(v).map(e => replacer(e))
+  BigUint64Array: v => Array.from(v).map(e => decompose(e)),
+  BigInt64Array: v => Array.from(v).map(e => decompose(e))
 }
 
 // Get descriptors of Object prototype
 const protodescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
-
-const repdesc = (descriptors) => {
+const decompDescriptors = (descriptors) => {
   const newdescs = {}
   Object.entries(descriptors || {})
-    // discard descriptors of Object prototype
-    .filter(([name, desc]) => !isClone(desc, protodescriptors[name]))
-    .forEach(([name, desc]) => {
-      if ('value' in desc) {
-        desc.value = replacer(desc.value)
+    // discard descriptors present in Object prototype
+    .filter(([name, descriptor]) => !isClone(descriptor, protodescriptors[name]))
+    .forEach(([name, descriptor]) => {
+      if ('value' in descriptor) { // We only need to decompose value property
+        descriptor.value = decompose(descriptor.value)
       }
-      newdescs[name] = desc
+      newdescs[name] = descriptor
     })
   return newdescs
 }
 
-function isInstanceOf(obj, type) {
+function isInstanceOf(obj, type) { // Check if object is instance of a given type
   while (obj) {
     if (obj.constructor && obj.constructor.name === type ) return true
-    obj = Object.getPrototypeOf(obj)
+    obj = Object.getPrototypeOf(obj) //Go deeper on chain
   }
   return false
 }
-const btypes = Object.keys(builtinTypes)
+const bTypesNames = Object.keys(builtinTypes) // Avoid to get it everytime
 function getValue(obj) {
-  try {
-    for(const T of btypes) {
-      if (isInstanceOf(obj, T)) return {
-        _value: builtinTypes[T](obj),
-        _type: T
-      }
+  try { // Avoid TypeError: Number.prototype.valueOf requires that 'this' be a Number
+    for(const typename of bTypesNames) {
+      if (isInstanceOf(obj, typename)) return builtinTypes[typename](obj)
     }
   } catch (e) {}
-  console.log('Not a base type for', obj)
-  return {}
+  return undefined
 }
-const replacer = (obj) => {
+const decompose = (obj) => {
   if (obj === undefined) { return { _class: 'undefined' } }
   // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
   // Change from above test as it reveals the BigInt is not an Object!!!
   if (obj && obj.constructor && obj.constructor.name
-    // don't replace if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
+    // don't decompose if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
     && (!basicTypes.includes(obj.constructor) || obj instanceof Object)){
     const _class = obj.constructor.name
     if (weirdTypes[_class]) {
-      //idea from https://golb.hplar.ch/2018/09/javascript-bigint.html
       return {
         _class,
         _value: weirdTypes[_class](obj)
@@ -126,29 +120,29 @@ const replacer = (obj) => {
     } else if(obj.constructor === Array || obj.constructor === Object) {
       return {
         _class,
-        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj))
-        // _value: getValue(obj)
+        _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj))
       }
     } else {
-      const { _value, _type } = getValue(obj) || {}
+      const _value = getValue(obj) // For cases where obj is an instance of sub class os a builtin type
       return {
         _class,
         _value,
-        _type,
-        _descriptors: repdesc(Object.getOwnPropertyDescriptors(obj)),
-        _prototype: replacer(Object.getPrototypeOf(obj))
+        _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj)),
+        _prototype: decompose(Object.getPrototypeOf(obj))
       }
     }
-  } else {
-    return obj
   }
+  // Don't need to decompose
+  return obj
 }
 
 const reconstruct = (obj, ...classes) => {
   const lookup = {}
   classes.forEach(c => { lookup[c.name] = c.prototype })
+
   const map = new Map()
   function compdesc (descriptors) {
+    //compose/create descriptors
     Object.entries(descriptors || {}).forEach(([name, desc]) => {
       if ('value' in desc) {
         desc.value = compose(desc.value)
@@ -156,6 +150,7 @@ const reconstruct = (obj, ...classes) => {
     })
     return descriptors
   }
+
   function compose (obj) {
     try {
       if (obj && obj._class === 'undefined') { return undefined }
@@ -175,8 +170,8 @@ const reconstruct = (obj, ...classes) => {
             const prototype = Object.getPrototypeOf(parent)
             const descriptors = compdesc(obj._descriptors)
             const newobj = Object.create(prototype, descriptors)
-            if (obj._value !== undefined && obj._type && builtinTypes[obj._type]) {
-              //const base = builtinTypes[obj._type](obj._value)
+            if (obj._value !== undefined) {
+              // Special cases where object is an instance of a sub class of a builtin object
               const base = new newobj.constructor(obj._value)
               return Object.assign(base, newobj)
             }
@@ -185,18 +180,17 @@ const reconstruct = (obj, ...classes) => {
             console.log("SHOULDN't HAPPEN")
           }
         } else if (obj._value !== undefined && builtinTypes[obj._class]) {
+          // for builtin objects
           const value = builtinTypes[obj._class](obj._value, compose)
           if (obj._class === 'Function' && value.name) {
-            console.log('obj._class', obj._class)
-            console.log('obj._value', obj._value)
-            if (map.has(value.name)) {
-              map.get(value.name).push(global[value.name])
+            // temporary publish on global scope the named functions and classes
+            const f = value
+            if (map.has(f.name)) {
+              map.get(f.name).push(global[f.name])
             } else {
-              map.set(value.name, [global[value.name]])
+              map.set(f.name, [global[f.name]])
             }
-            global[value.name] = value
-            console.log('global[value.name]', global[value.name])
-            console.log('map', map)
+            global[f.name] = f
           }
           return value
         } else {
@@ -216,14 +210,14 @@ const reconstruct = (obj, ...classes) => {
   }
   const result = compose(obj)
   ;[...map.entries()].forEach(([k, v]) => {
+    // Clean global scope setting it to initial values (possible undefined)
     global[k] = v[0]
-    console.log(`k=${k}, global[${k}]=${global[k]}`)
   })
   return result
 }
 
 const serialize = object => {
-  return JSON.stringify(replacer(object))
+  return JSON.stringify(decompose(object))
 }
 const deserialize = (json, ...classes) => {
   return reconstruct(JSON.parse(json), ...classes)
