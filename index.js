@@ -204,7 +204,12 @@ const reconstruct = (obj, ...classes) => {
       console.warn(e)
     }
   }
-  return compose(obj)
+  const result = compose(obj)
+  ;[...map.entries()].forEach(([k, v]) => {
+    global[k] = v[0]
+    console.log(`k=${k}, global[${k}]=${global[k]}`)
+  })
+  return result
 }
 
 const serialize = object => {
