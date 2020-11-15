@@ -221,11 +221,12 @@ class Long extends Int{
     super(i)
     this.cnt = 2*i
   }
-  get long() { return this.i}
+  get long() { return 'L' + this.i}
 }
 
 //serdes(new Int(3))
-serdes(new Long(3))
+const r = serdes(new Long(3))
+console.log(r.long)
 //const f = new Function('return class I extends Number{}')
 //console.log(f)
 //console.log(f.name)
