@@ -74,6 +74,13 @@ class Sset extends Set{
 }
 //serdes(new Set(), false, false)
 serdes(new Sset([{i:1}]), false, false)
+class Smap extends Map{
+  constructor(s) {
+    super(s)
+  }
+  get name() {return 'my name'}
+}
+serdes(new Smap([[{i:1}, {j:3}]]), false, false)
 //console.log(Object.getOwnPropertyDescriptors(new Sset()))
 
 const isIterable = obj => obj && typeof obj[Symbol.iterator] === 'function'
