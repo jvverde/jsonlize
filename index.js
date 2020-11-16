@@ -67,6 +67,8 @@ const weirdTypes = {
   BigInt64Array: v => Array.from(v).map(e => decompose(e))
 }
 
+const isIterable = obj => obj && typeof obj[Symbol.iterator] === 'function'
+
 // Get descriptors of Object prototype
 const protodescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
 const decompDescriptors = (descriptors) => {
@@ -80,6 +82,7 @@ const decompDescriptors = (descriptors) => {
       }
       newdescs[name] = descriptor
     })
+  //console.log('newdescs', newdescs)
   return newdescs
 }
 
@@ -99,40 +102,71 @@ function getValue(obj) {
   } catch (e) {}
   return undefined
 }
-const decompose = (obj) => {
+const decompose = (obj, isPrototype = false) => {
+  //console.log('obj:', obj)
   if (obj === undefined) { return { _class: 'undefined' } }
+  //console.log('obj.constructor:', obj.constructor)
+  //console.log('obj.constructor.name:', (obj.constructor || {}).name)
+  //console.log('obj instanceof Object:', obj instanceof Object)
   // if (obj && obj instanceof Object && obj.constructor && obj.constructor.name ) {
   // Change from above test as it reveals the BigInt is not an Object!!!
   if (obj && obj.constructor && obj.constructor.name
     // don't decompose if obj is a basic type, unless it is defined as an object (ex: let i = new Number())
     && (!basicTypes.includes(obj.constructor) || obj instanceof Object)){
     const _class = obj.constructor.name
+    // console.log('class', _class)
     if (weirdTypes[_class]) {
+      //console.log('weirdTypes')
+      if (isPrototype && isIterable(obj)) {
+        //console.log('isPrototype')
+        return {
+          _class,
+          _value: []
+        }
+      }
       return {
         _class,
         _value: weirdTypes[_class](obj)
       }
     } else if (builtinTypes[_class]) {
+      //console.log('builtinTypes')
       return {
         _class,
         _value: obj
       }
     } else if(obj.constructor === Array || obj.constructor === Object) {
+      //console.log('Array or Object')
       return {
         _class,
         _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj))
       }
     } else {
-      const _value = getValue(obj) // For cases where obj is an instance of sub class os a builtin type
+      //console.log('None of above')
+      let _value, _parent
+      if (!isPrototype) { // Don't do this for prototypes
+        if (obj instanceof Set) {
+          _parent = 'Set'
+          _value = [...obj].map(v => decompose(v))
+        } else if (obj instanceof Map) {
+          _parent = 'Map'
+          _value = [...obj].map(v => decompose(v))
+        } else {
+          _value = getValue(obj) // For cases where obj is an instance of sub class of a builtin type
+        }
+      }
+      const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
+      const _prototype = decompose(Object.getPrototypeOf(obj), true)
       return {
         _class,
+        _parent,
         _value,
-        _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj)),
-        _prototype: decompose(Object.getPrototypeOf(obj))
+        _descriptors,
+        _prototype
       }
     }
   }
   // Don't need to decompose
+  // console.log('Do nothing for:', obj)
   return obj
 }
 
@@ -152,12 +186,20 @@ const reconstruct = (obj, ...classes) => {
   }
 
   function compose (obj) {
+    if (obj && obj._class === 'undefined') { return undefined }
     try {
-      if (obj && obj._class === 'undefined') { return undefined }
-      else if (obj && obj._class && typeof obj._class === 'string') {
+      if (obj && obj._class && /* Just to make sure*/ typeof obj._class === 'string') {
         if (obj._descriptors) {
           if (obj._class === 'Array') {
             const prototype = Object.getPrototypeOf([])
+            const descriptors = compdesc(obj._descriptors)
+            return Object.create(prototype, descriptors)
+          } else if (obj._class === 'Set') {
+            const prototype = Object.getPrototypeOf(new Set)
+            const descriptors = compdesc(obj._descriptors)
+            return Object.create(prototype, descriptors)
+          } else if (obj._class === 'Map') {
+            const prototype = Object.getPrototypeOf(new Map)
             const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Object') {
@@ -171,9 +213,16 @@ const reconstruct = (obj, ...classes) => {
             const descriptors = compdesc(obj._descriptors)
             const newobj = Object.create(prototype, descriptors)
             if (obj._value !== undefined) {
-              // Special cases where object is an instance of a sub class of a builtin object
-              const base = new newobj.constructor(obj._value)
-              return Object.assign(base, newobj)
+              if (obj._parent && builtinTypes[obj._parent]) {
+                // Special cases where object is an instance of a sub class of a builtin object
+                const parent = builtinTypes[obj._parent](obj._value, compose)
+                const base = new newobj.constructor(parent)
+                return Object.assign(base, newobj)
+              } else {
+                // Another special cases where object is an instance of a sub class of simple builtin object
+                const base = new newobj.constructor(obj._value)
+                return Object.assign(base, newobj)
+              }
             }
             return newobj
           } else {
