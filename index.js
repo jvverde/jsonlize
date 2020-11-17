@@ -221,20 +221,19 @@ const reconstruct = (obj, ...classes) => {
           } else {
             console.log("SHOULDN't HAPPEN")
           }
-        } else if (obj._value !== undefined && builtins[obj._class]) {
+        } else if (builtins[obj._class]) {
           // for builtin objects
-          const value = builtins[obj._class].assembly(obj._value, compose)
-          if (obj._class === 'Function' && value.name) {
+          const builtinValue = builtins[obj._class].assembly(obj._value, compose)
+          if (obj._class === 'Function' && 'name' in builtinValue) {
             // temporary publish on global scope the named functions and classes
-            const f = value
-            if (map.has(f.name)) {
-              map.get(f.name).push(global[f.name])
+            if (map.has(builtinValue.name)) {
+              map.get(builtinValue.name).push(global[builtinValue.name])
             } else {
-              map.set(f.name, [global[f.name]])
+              map.set(builtinValue.name, [global[builtinValue.name]])
             }
-            global[f.name] = f
+            global[builtinValue.name] = builtinValue
           }
-          return value
+          return builtinValue
         } else {
           console.log("SHOULDN't HAPPEN EITHER")
         }
