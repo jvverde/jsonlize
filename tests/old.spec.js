@@ -7,29 +7,29 @@ describe('Test (de)serialize of instances of javascript objects', () => {
     const obj = { i: 1, j: [2, 3], o: { k: 4 } }
     const array = [1, 2, 3, obj]
     const set = [1, 1, 2, 2, array, obj]
-    const map = [ ['a', 1], ['b', 2], [array, obj], [obj, set] ]
+    const map = [['a', 1], ['b', 2], [array, obj], [obj, set]]
     const tests = {
-      'Boolean Object' : new Boolean(random.boolean()),
+      'Boolean Object': new Boolean(random.boolean()),
       'literal Boolean': !random.boolean(),
-      'Number Object' : new Number(random.number()),
+      'Number Object': new Number(random.number()),
       'literal Number': 0 | random.number(),
-      'String Object' : new String(lorem.paragraphs()),
-      'literal String' : '' + lorem.paragraphs(),
-      'Date' : new Date(),
-      'BigInt' : BigInt(random.hexaDecimal(64)),
-      'ReExp' :  /^$/igsm,
-      'empty Object' : new Object,
-      'empty literal Object' : {},
-      'empty Array' : new Array,
-      'empty literal array' : [],
+      'String Object': new String(lorem.paragraphs()),
+      'literal String': '' + lorem.paragraphs(),
+      Date: new Date(),
+      BigInt: BigInt(random.hexaDecimal(64)),
+      ReExp: /^$/igsm,
+      'empty Object': new Object(),
+      'empty literal Object': {},
+      'empty Array': new Array(),
+      'empty literal array': [],
       'empty Set': new Set(),
       'empty Map': new Map(),
-      'Object' : new Object(obj),
-      'literal Object' : obj,
-      'Array' : new Array(...array),
-      'literal array' : array,
-      'Set': new Set(set),
-      'Map': new Map(map)
+      Object: new Object(obj),
+      'literal Object': obj,
+      Array: new Array(...array),
+      'literal array': array,
+      Set: new Set(set),
+      Map: new Map(map)
     }
     for (const [k, v] of Object.entries(tests)) {
       test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
@@ -43,8 +43,8 @@ describe('Test (de)serialize of instances of javascript objects', () => {
     class A {}
     class B extends A {}
     const tests = {
-      'Class empty' : new A,
-      'Sub Class' : new B
+      'Class empty': new A(),
+      'Sub Class': new B()
     }
     for (const [k, v] of Object.entries(tests)) {
       test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
@@ -63,7 +63,7 @@ describe('Test (de)serialize of instances of javascript objects', () => {
   describe('More', () => {
     class A {}
     class B extends A {}
-    for (let cnt = 1; cnt-->0; ){
+    for (let cnt = 1; cnt-- > 0;) {
       // --------------------------
       const re = /^[a-f]{3,}$/igsm
       test(`Deserialize of a serialized of Regex (${re}) should be also a re`, () => {
@@ -81,14 +81,14 @@ describe('Test (de)serialize of instances of javascript objects', () => {
           result.getUTCDate()
           result.toLocaleString()
           result.toTimeString()
-        }).not.toThrow();
+        }).not.toThrow()
       })
-      const f = (a) => a*a*a
-      test(`Deserialize of a serialized of function should be Function`, () => {
+      const f = (a) => a * a * a
+      test('Deserialize of a serialized of function should be Function', () => {
         const json = serialize(f)
         const g = deserialize(json)
         const pow = g(4)
-        expect(pow).toBe(4*4*4)
+        expect(pow).toBe(4 * 4 * 4)
       })
     }
   })

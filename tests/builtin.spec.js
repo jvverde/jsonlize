@@ -7,30 +7,30 @@ describe('Test (de)serialize of instances of javascript objects', () => {
     const obj = { i: 1, j: [2, 3], o: { k: 4 } }
     const array = [1, 2, 3, obj]
     const set = [1, 1, 2, 2, array, obj]
-    const map = [ ['a', 1], ['b', 2], [array, obj], [obj, set] ]
+    const map = [['a', 1], ['b', 2], [array, obj], [obj, set]]
     const tests = {
-      'Boolean Object' : new Boolean(random.boolean()),
+      'Boolean Object': new Boolean(random.boolean()),
       'literal Boolean': !random.boolean(),
-      'Number Object' : new Number(random.number()),
+      'Number Object': new Number(random.number()),
       'literal Number': 0 | new Number(random.number()),
-      'String Object' : new String(lorem.paragraphs()),
-      'literal String' : `${lorem.paragraphs()}`,
-      'Date' : new Date(),
-      'BigInt' : BigInt(random.hexaDecimal(64)),
-      'ReExp' :  /^$/igsm,
+      'String Object': new String(lorem.paragraphs()),
+      'literal String': `${lorem.paragraphs()}`,
+      Date: new Date(),
+      BigInt: BigInt(random.hexaDecimal(64)),
+      ReExp: /^$/igsm,
       'empty literal array': [],
-      'literal array' : array,
-      'empty Array' : new Array,
-      'Array with empty values' : new Array(5),
-      'Array' : new Array(...array),
-      'empty literal Object' : {},
-      'literal Object' : obj,
-      'empty Object' : new Object,
-      'Object' : new Object(obj),
-       'empty Set': new Set(),
+      'literal array': array,
+      'empty Array': new Array(),
+      'Array with empty values': new Array(5),
+      Array: new Array(...array),
+      'empty literal Object': {},
+      'literal Object': obj,
+      'empty Object': new Object(),
+      Object: new Object(obj),
+      'empty Set': new Set(),
       'empty Map': new Map(),
-      'Set': new Set(set),
-      'Map': new Map(map)
+      Set: new Set(set),
+      Map: new Map(map)
     }
     for (const [k, v] of Object.entries(tests)) {
       test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
@@ -40,16 +40,16 @@ describe('Test (de)serialize of instances of javascript objects', () => {
       })
     }
     const fntests = {
-      'literal anonymous function': function (){},
-      'literal named function': function f(){},
-      'Arrow function' : () => null,
-      'Function': new Function()
+      'literal anonymous function': function () {},
+      'literal named function': function f () {},
+      'Arrow function': () => null,
+      Function: new Function()
     }
     for (const [k, v] of Object.entries(fntests)) {
       test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
         const json = serialize(v)
         const result = deserialize(json)
-        const cond = isClone(result, v, {strictly: false})
+        const cond = isClone(result, v, { strictly: false })
         expect(cond).toBe(true)
       })
     }

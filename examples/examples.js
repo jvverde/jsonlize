@@ -1,10 +1,12 @@
+'use strict'
+
 const { serialize, deserialize } = require('./index')
 
-function getAllPropertyNames(obj) {
-  let result = new Set()
+function getAllPropertyNames (obj) {
+  const result = new Set()
   while (obj) {
-      Object.getOwnPropertyNames(obj).forEach(p => result.add(p));
-      obj = Object.getPrototypeOf(obj);
+    Object.getOwnPropertyNames(obj).forEach(p => result.add(p))
+    obj = Object.getPrototypeOf(obj)
   }
   return [...result]
 }
@@ -13,7 +15,7 @@ const today = new Date()
 const string = new String('abc')
 const bool = new Boolean()
 const number = new Number(3.14)
-const array = new Array(1,2)
+const array = new Array(1, 2)
 
 const text = 'texto'
 const falso = false
@@ -26,12 +28,14 @@ const mix = [1, {
 }]
 
 class A {
-  constructor(n) {
+  constructor (n) {
     this.n = n
   }
-  inc(n) {
+
+  inc (n) {
     this.n += n
   }
+
   get value () {
     return this.n
   }
@@ -40,7 +44,7 @@ const a = new A(10)
 const an = {
   i: 1,
   j: 2,
-  f: function(){ return this.j + this.i},
+  f: function () { return this.j + this.i },
   g: (a) => 2 * a + 1
 }
 const bi = BigInt(9007199254740991)
@@ -59,9 +63,9 @@ const obj = {
   f: function (a) {
     console.log('a=', a)
   },
-   g: (a) => a*a,
-   a,
-   an,
+  g: (a) => a * a,
+  a,
+  an,
   bi
 }
 
@@ -99,7 +103,7 @@ console.log(newt)
 console.log(newt.toLocaleString())
 
 console.log('--------------------')
-let sym = Symbol('foo')
+const sym = Symbol('foo')
 console.log(sym)
 const sj = serialize(sym)
 console.log(sj)
@@ -124,7 +128,7 @@ console.log(newr)
 
 console.log('--------------------')
 
-const set = new Set([1,1,1,2, a, an, today])
+const set = new Set([1, 1, 1, 2, a, an, today])
 console.log(set)
 const setj = serialize(set)
 console.log(setj)
@@ -132,10 +136,10 @@ const newset = deserialize(setj, A)
 console.log(newset)
 
 console.log('--------------------')
-let first = new Map([
+const first = new Map([
   [1, 'one'],
   [2, 'two'],
-  [a, 'three'],
+  [a, 'three']
 ])
 
 console.log(first)
@@ -193,18 +197,18 @@ console.log(o2)
 // console.log(ia3.constructor)
 // console.log(ia3.constructor.name)
 // console.log(typeof ia3.constructor)
- /*newobj.f('dddddddddddddddddd')
+/* newobj.f('dddddddddddddddddd')
 console.log(newobj.today.toLocaleString())
 newobj.a.inc(33)
 console.log(newobj.a.value)
 console.log(newobj.an.f())
-console.log(newobj.an.g(7))*/
+console.log(newobj.an.g(7)) */
 
-/*const test = Object.create(Array.prototype)
+/* const test = Object.create(Array.prototype)
 test[3] = 'c'
 console.log(test)
 console.log(Array.from({ '0': 1, '1': 2 }))
 console.log(Array.from(test))
 console.log({
   a: test
-})*/
+}) */

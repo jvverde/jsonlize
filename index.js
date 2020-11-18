@@ -75,7 +75,6 @@ const builtins = { // javascript builtin objects
   )
 }
 
-
 // Get descriptors of Object prototype
 const protodescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
 const decompDescriptors = (descriptors) => {
@@ -89,43 +88,40 @@ const decompDescriptors = (descriptors) => {
       }
       newdescs[name] = descriptor
     })
-  //console.log('newdescs', newdescs)
+  // console.log('newdescs', newdescs)
   return newdescs
 }
 
-function isInstanceOf(obj, type) { // Check if object is instance of a given type
+function isInstanceOf (obj, type) { // Check if object is instance of a given type
   while (obj) {
-    if (obj.constructor && obj.constructor.name === type ) return true
-    obj = Object.getPrototypeOf(obj) //Go deeper on chain
+    if (obj.constructor && obj.constructor.name === type) return true
+    obj = Object.getPrototypeOf(obj) // Go deeper on chain
   }
   return false
 }
 const bTypesNames = Object.keys(builtins) // Avoid to get it everytime
-function getTypeValue(obj) {
+function getTypeValue (obj) {
   try { // Avoid TypeError: Number.prototype.valueOf requires that 'this' be a Number
-    for(const typename of bTypesNames) {
-      if (isInstanceOf(obj, typename)) return {
-        type: typename,
-        value: builtins[typename].dismantle(obj)
+    for (const typename of bTypesNames) {
+      if (isInstanceOf(obj, typename)) {
+        return {
+          type: typename,
+          value: builtins[typename].dismantle(obj)
+        }
       }
     }
   } catch (e) {}
   return {}
 }
 const decompose = (obj, isPrototype = false) => {
-  //console.log('obj:', obj)
-  if (arguments.length === 0) { return obj }
-  else if (obj === undefined) { return { _class: 'undefined' } }
-  else if (obj === null) { return obj }
-  else if (!obj.constructor || !obj.constructor.name) { return obj }
-  else if (typeof obj !== 'object' && basicTypes.includes(obj.constructor)) { return obj }
-  else {
+  // console.log('obj:', obj)
+  if (arguments.length === 0) { return obj } else if (obj === undefined) { return { _class: 'undefined' } } else if (obj === null) { return obj } else if (!obj.constructor || !obj.constructor.name) { return obj } else if (typeof obj !== 'object' && basicTypes.includes(obj.constructor)) { return obj } else {
     const _class = obj.constructor.name
     // console.log('class', _class)
     if (builtins[_class]) {
-      //console.log('dismantle')
+      // console.log('dismantle')
       if (isPrototype && isIterable(obj)) {
-        //console.log('isPrototype')
+        // console.log('isPrototype')
         return {
           _class,
           _value: []
@@ -135,8 +131,8 @@ const decompose = (obj, isPrototype = false) => {
         _class,
         _value: builtins[_class].dismantle(obj, decompose)
       }
-    } else if(obj.constructor === Array || obj.constructor === Object) {
-      //console.log('Array or Object')
+    } else if (obj.constructor === Array || obj.constructor === Object) {
+      // console.log('Array or Object')
       return {
         _class,
         _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj))
@@ -175,7 +171,7 @@ const reconstruct = (obj, ...classes) => {
 
   const map = new Map()
   function compdesc (descriptors) {
-    //compose/create descriptors
+    // compose/create descriptors
     Object.entries(descriptors || {}).forEach(([name, desc]) => {
       if ('value' in desc) {
         desc.value = compose(desc.value)
@@ -187,18 +183,18 @@ const reconstruct = (obj, ...classes) => {
   function compose (obj) {
     if (obj && obj._class === 'undefined') { return undefined }
     try {
-      if (obj && obj._class && /* Just to make sure*/ typeof obj._class === 'string') {
+      if (obj && obj._class && /* Just to make sure */ typeof obj._class === 'string') {
         if (obj._descriptors) {
           if (obj._class === 'Array') {
             const prototype = Object.getPrototypeOf([])
             const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Set') {
-            const prototype = Object.getPrototypeOf(new Set)
+            const prototype = Object.getPrototypeOf(new Set())
             const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Map') {
-            const prototype = Object.getPrototypeOf(new Map)
+            const prototype = Object.getPrototypeOf(new Map())
             const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Object') {
@@ -239,12 +235,12 @@ const reconstruct = (obj, ...classes) => {
         }
       }
       return obj
-        // if (lookup[obj._class]) { // check if it is a user defined class
-        //  const prototype = lookup[obj._class]
-        //  const children = compose(obj._value)
-        //  const descriptors = Object.getOwnPropertyDescriptors(children)
-        //  return Object.create(prototype, descriptors)
-        //}
+      // if (lookup[obj._class]) { // check if it is a user defined class
+      //  const prototype = lookup[obj._class]
+      //  const children = compose(obj._value)
+      //  const descriptors = Object.getOwnPropertyDescriptors(children)
+      //  return Object.create(prototype, descriptors)
+      // }
     } catch (e) {
       console.warn(e)
     }

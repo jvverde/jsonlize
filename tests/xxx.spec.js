@@ -3,10 +3,11 @@ const isClone = require('isClone')
 
 describe('Test (de)serialize of instances of classes', () => {
   class A {
-    constructor(n) {
+    constructor (n) {
       this.n = n
     }
-    inc(n) {
+
+    inc (n) {
       this.n += n
     }
   }
@@ -15,7 +16,7 @@ describe('Test (de)serialize of instances of classes', () => {
   const stringObj = JSON.parse(string)
 
   describe('Test instance of a class', () => {
-    test(`should serialize an  instance of a given class`, () => {
+    test('should serialize an  instance of a given class', () => {
       const json = serialize(a)
       expect(json).toMatchJSON(stringObj)
     })
@@ -97,5 +98,5 @@ describe('Test (de)serialize of instances of classes', () => {
       obj.a.inc(5)
       expect(obj).toMatchObject(cc)
     })
-  })*/
+  }) */
 })
