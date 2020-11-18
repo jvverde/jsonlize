@@ -1,17 +1,28 @@
 'use strict'
 
-const { serialize, deserialize } = require('./index')
+const { serialize, deserialize } = require('../index')
+const { isClone, isLike } = require('isClone')
 
-function getAllPropertyNames (obj) {
-  const result = new Set()
-  while (obj) {
-    Object.getOwnPropertyNames(obj).forEach(p => result.add(p))
-    obj = Object.getPrototypeOf(obj)
-  }
-  return [...result]
-}
+const serdes = (v) => deserialize(serialize(v))
 
-const today = new Date()
+// let inp, out
+
+// inp = new Date()
+// out = serdes(inp)
+// console.log('today is', out.toLocaleString())
+
+console.log(serdes(null) === null)
+console.log(serdes(undefined) === undefined)
+console.log(serdes(Infinity) === Infinity)
+console.log(serdes(7) === 7)
+console.log(serdes('') === '')
+console.log(serdes(false) === false)
+console.log(serdes(1n) === 1n)
+
+console.log(isClone(serdes(NaN), NaN)) //because NaN !== NaN
+
+
+/*
 const string = new String('abc')
 const bool = new Boolean()
 const number = new Number(3.14)
@@ -188,6 +199,7 @@ const oj = serialize(o)
 console.log(oj)
 const o2 = deserialize(oj)
 console.log(o2)
+*/
 // const ia = new Int8Array(3)
 // const ia2 = new Int8Array([1,2,3,4])
 // const ia3 = new Int8Array(10)

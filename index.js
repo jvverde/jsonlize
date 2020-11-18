@@ -113,9 +113,18 @@ function getTypeValue (obj) {
   } catch (e) {}
   return {}
 }
+
+// Gllbal properties
+const gp2string = new Map([[undefined, 'undefined'], [Infinity, 'Infinity'], [NaN, 'NaN'], [Math, 'Math']])
+const string2gp = new Map([['undefined', undefined], ['Infinity', Infinity], ['NaN', NaN], ['Math', Math]])
+
 const decompose = (obj, isPrototype = false) => {
-  // console.log('obj:', obj)
-  if (arguments.length === 0) { return obj } else if (obj === undefined) { return { _class: 'undefined' } } else if (obj === null) { return obj } else if (!obj.constructor || !obj.constructor.name) { return obj } else if (typeof obj !== 'object' && basicTypes.includes(obj.constructor)) { return obj } else {
+  if (gp2string.has(obj)) {
+    return { _class: gp2string.get(obj) }
+  } else if (obj === null || !obj.constructor || !obj.constructor.name
+    || (typeof obj !== 'object' && basicTypes.includes(obj.constructor))) {
+    return obj
+  } else {
     const _class = obj.constructor.name
     // console.log('class', _class)
     if (builtins[_class]) {
@@ -181,7 +190,7 @@ const reconstruct = (obj, ...classes) => {
   }
 
   function compose (obj) {
-    if (obj && obj._class === 'undefined') { return undefined }
+    if (obj && obj._class && string2gp.has(obj._class)) { return string2gp.get(obj._class) }
     try {
       if (obj && obj._class && /* Just to make sure */ typeof obj._class === 'string') {
         if (obj._descriptors) {
@@ -253,7 +262,8 @@ const reconstruct = (obj, ...classes) => {
   return result
 }
 
-const serialize = object => {
+function serialize (object) {
+  if (arguments.length === 0) return
   return JSON.stringify(decompose(object))
 }
 const deserialize = (json, ...classes) => {
