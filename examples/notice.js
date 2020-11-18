@@ -7,7 +7,7 @@ function serdes (obj, debug = false, strictly = true) {
   console.log('serialize', s)
   const newobj = deserialize(s)
   console.log('clone:', newobj)
-  console.log('isClone:', isClone(obj, newobj, {debug, strictly}))
+  console.log('isClone:', isClone(obj, newobj, { debug, strictly }))
   console.log('-------------------')
   return newobj
 }
@@ -78,7 +78,7 @@ class Sset extends Set {
   }
 }
 serdes(new Set(), false, false)
-serdes(new Sset([{i:1}]), false, false)
+serdes(new Sset([{ i: 1 }]), false, false)
 
 class Smap extends Map {
   constructor (s) {
@@ -87,4 +87,4 @@ class Smap extends Map {
 
   get name () { return 'my name' }
 }
-serdes(new Smap([[{i:1}, {j:3}]]), false, false)
+serdes(new Smap([[{ i: 1 }, { j: 3 }]]), false, false)
