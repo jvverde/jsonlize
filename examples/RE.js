@@ -1,27 +1,25 @@
 'use strict'
 const { serialize, deserialize } = require('../index')
-const clone = (v) => deserialize(serialize(v))
+const serdes = (v) => deserialize(serialize(v))
 
-let input, out
+const re = /[a-f]/ig
 
-input = /[a-f]/ig
+re.test('A3CB2')
 
-input.test('A3CB2')
+console.log('A' === RegExp.lastMatch && 1 === re.lastIndex)
 
-console.log(`match`, RegExp.lastMatch, input.lastIndex) // expected A 1
+const clone = serdes(re)
 
-out = clone(input)
-
-out.test('A3CB2')
-console.log(`match`, RegExp.lastMatch, out.lastIndex) /* expected C 3 !!!
-  THIS is because out was cloned after first usage,
+clone.test('A3CB2')
+console.log('C' === RegExp.lastMatch && 3 === clone.lastIndex) /*
+  THIS is because clone was cloned after first usage,
   so the RegExpInstance.lastIndex was at position 2
 */
 
-out.test('A3CB2')
-console.log(`match`, RegExp.lastMatch, out.lastIndex) // expected B 4
+clone.test('A3CB2')
+console.log('B' === RegExp.lastMatch && 4 === clone.lastIndex)
 
-input.test('A3CB2')
-console.log(`match`, RegExp.lastMatch, input.lastIndex) /* expected C 3 !!!
-  input is not modified with operations over it's clone
+re.test('A3CB2')
+console.log('C' === RegExp.lastMatch && 3 === re.lastIndex) /*
+  re is not modified with operations over it's clone
 */
