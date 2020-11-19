@@ -44,8 +44,6 @@ serdes(new A(3), false, false)
 serdes(new Set([new A(3)]), false, false)
 
 class Int extends Number {
-  // static cnt = 0
-  // j = 2
   constructor (i = 0) {
     super(i)
     this.label = 'int'
@@ -53,9 +51,6 @@ class Int extends Number {
 
   get tag () { return this.label }
   get val () { return this }
-  // setval(v) {
-  //  this.i +  v
-  // }
 }
 
 serdes(new Int(3), false, false)

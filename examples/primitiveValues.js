@@ -1,7 +1,6 @@
 'use strict'
-
 const { serialize, deserialize } = require('../index')
-const { isClone, isLike } = require('isClone')
+const { isClone } = require('isClone')
 
 const serdes = (v) => deserialize(serialize(v))
 

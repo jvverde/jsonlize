@@ -1,7 +1,5 @@
 'use strict'
-
 const { serialize, deserialize } = require('../index')
-
 const clone = (v) => deserialize(serialize(v))
 
 let input, out
