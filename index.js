@@ -1,3 +1,4 @@
+// https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
 const isClone = require('isClone')
 
 const isIterable = obj => obj && typeof obj[Symbol.iterator] === 'function'
@@ -75,13 +76,13 @@ const builtins = { // javascript builtin objects
   )
 }
 
-// Get descriptors of Object prototype
-const protodescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
+// Get default descriptors of Object prototype
+const defaultdescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
 const decompDescriptors = (descriptors) => {
   const newdescs = {}
   Object.entries(descriptors || {})
-    // discard descriptors present in Object prototype
-    .filter(([name, descriptor]) => !isClone(descriptor, protodescriptors[name]))
+    // discard descriptors present in default Object prototype
+    .filter(([name, descriptor]) => !isClone(descriptor, defaultdescriptors[name]))
     .forEach(([name, descriptor]) => {
       if ('value' in descriptor) { // We only need to decompose value property
         descriptor.value = decompose(descriptor.value)
@@ -114,7 +115,9 @@ function getTypeValue (obj) {
   return {}
 }
 
-// Gllbal properties
+const memoir = new Map()
+let id = 0
+// Global properties
 const gp2string = new Map([[undefined, 'undefined'], [Infinity, 'Infinity'], [NaN, 'NaN'], [Math, 'Math']])
 const string2gp = new Map([['undefined', undefined], ['Infinity', Infinity], ['NaN', NaN], ['Math', Math]])
 
@@ -126,11 +129,8 @@ const decompose = (obj, isPrototype = false) => {
     return obj
   } else {
     const _class = obj.constructor.name
-    // console.log('class', _class)
     if (builtins[_class]) {
-      // console.log('dismantle')
       if (isPrototype && isIterable(obj)) {
-        // console.log('isPrototype')
         return {
           _class,
           _value: []
@@ -141,14 +141,31 @@ const decompose = (obj, isPrototype = false) => {
         _value: builtins[_class].dismantle(obj, decompose)
       }
     } else if (obj.constructor === Array || obj.constructor === Object) {
-      // console.log('Array or Object')
+      let _id
+      if (!isPrototype) { // Don't do this for prototypes
+        if (memoir.has(obj)) {
+          return {
+            _ref: memoir.get(obj)
+          }
+        }
+        _id = id++
+        memoir.set(obj, _id)
+      }
       return {
+        _id,
         _class,
         _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj))
       }
     } else {
-      let _value, _parent
+      let _value, _parent, _id
       if (!isPrototype) { // Don't do this for prototypes
+        if (memoir.has(obj)) {
+          return {
+            _ref: memoir.get(obj)
+          }
+        }
+        _id = id++
+        memoir.set(obj, _id)
         if (obj instanceof Set) {
           _parent = 'Set'
           _value = [...obj].map(v => decompose(v))
@@ -164,6 +181,7 @@ const decompose = (obj, isPrototype = false) => {
       const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
       const _prototype = decompose(Object.getPrototypeOf(obj), true)
       return {
+        _id,
         _class,
         _parent,
         _value,
@@ -189,11 +207,16 @@ const reconstruct = (obj, ...classes) => {
     return descriptors
   }
 
+  const refs = new Map()
   function compose (obj) {
     if (obj && obj._class && string2gp.has(obj._class)) { return string2gp.get(obj._class) }
     try {
-      if (obj && obj._class && /* Just to make sure */ typeof obj._class === 'string') {
+      if (obj && obj._ref) {
+        refs.set(obj._ref, obj)
+        return obj
+      } else if (obj && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
         if (obj._descriptors) {
+          const id = { __id__: obj._id}
           if (obj._class === 'Array') {
             const prototype = Object.getPrototypeOf([])
             const descriptors = compdesc(obj._descriptors)
