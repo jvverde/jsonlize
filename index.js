@@ -4,9 +4,18 @@ const isClone = require('isClone')
 const isIterable = obj => obj && typeof obj[Symbol.iterator] === 'function'
 const basicTypes = [Number, String, Boolean]
 const transform = (assembly, dismantle = v => v) => {
+  const trycatch = f => (...args) => {
+    try {
+      return f(...args)
+    } catch (e) {
+      console.warn(e)
+      console.log('args:', ...args)
+      return undefined
+    }
+  }
   return {
-    dismantle,
-    assembly
+    dismantle: trycatch(dismantle),
+    assembly: trycatch(assembly)
   }
 }
 const builtins = { // javascript builtin objects
@@ -84,8 +93,14 @@ const decompDescriptors = (descriptors) => {
     // discard descriptors present in default Object prototype
     .filter(([name, descriptor]) => !isClone(descriptor, defaultdescriptors[name]))
     .forEach(([name, descriptor]) => {
-      if ('value' in descriptor) { // We only need to decompose value property
-        descriptor.value = decompose(descriptor.value)
+      for (const key of ['value', 'get', 'set']) {
+        if (key in descriptor) { // We only need to decompose these 3 properties
+          if (key === 'value') { descriptor[key] = decompose(descriptor[key]) }
+          else { descriptor[key] = {
+            _class: 'Function',
+            _value: (descriptor[key].toString() || '').replace(/^[sg]et /,'function ')
+          }}
+        }
       }
       newdescs[name] = descriptor
     })
@@ -200,8 +215,10 @@ const reconstruct = (obj, ...classes) => {
   function compdesc (descriptors) {
     // compose/create descriptors
     Object.entries(descriptors || {}).forEach(([name, desc]) => {
-      if ('value' in desc) {
-        desc.value = compose(desc.value)
+      for (const key of ['value', 'get', 'set']) {
+        if (key in desc) {
+          desc[key] = compose(desc[key])
+        }
       }
     })
     return descriptors
@@ -237,6 +254,7 @@ const reconstruct = (obj, ...classes) => {
             const proto = compose(obj._prototype)
             const parent = proto.constructor instanceof Function ? new proto.constructor() : proto
             const prototype = Object.getPrototypeOf(parent)
+            console.log('parent:', parent)
             const descriptors = compdesc(obj._descriptors)
             const newobj = Object.create(prototype, descriptors)
             if (obj._parent && builtins[obj._parent]) {
@@ -252,7 +270,7 @@ const reconstruct = (obj, ...classes) => {
         } else if (builtins[obj._class]) {
           // for builtin objects
           const builtinValue = builtins[obj._class].assembly(obj._value, compose)
-          if (obj._class === 'Function' && 'name' in builtinValue) {
+          if (obj._class === 'Function' && builtinValue && 'name' in builtinValue) {
             // temporary publish on global scope the named functions and classes
             if (map.has(builtinValue.name)) {
               map.get(builtinValue.name).push(global[builtinValue.name])
