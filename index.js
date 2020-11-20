@@ -254,6 +254,11 @@ const reconstruct = (obj, ...classes) => {
             const proto = compose(obj._prototype)
             const parent = proto.constructor instanceof Function ? new proto.constructor() : proto
             const prototype = Object.getPrototypeOf(parent)
+            const preobj = Object.create(prototype)
+            if (preobj.constructor instanceof Function) {
+              console.log('run', proto.constructor.toString())
+              new preobj.constructor()
+            }
             console.log('parent:', parent)
             const descriptors = compdesc(obj._descriptors)
             const newobj = Object.create(prototype, descriptors)
