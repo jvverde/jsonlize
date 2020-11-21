@@ -100,10 +100,11 @@ const decompDescriptors = (descriptors) => {
           if (key === 'value' || descriptor[key] === undefined) {
             descriptor[key] = decompose(descriptor[key])
           } else {
-            descriptor[key] = {
-              _class: 'String',
-              _value: descriptor[key].toString() //.replace(/^[sg]et /,'function ')
-            }
+            return
+            // descriptor[key] = {
+            //   _class: 'String',
+            //  _value: descriptor[key].toString().replace(/^[^(]+/,'function') //.replace(/^[sg]et /,'function ')
+            //}
           }
         }
       }
@@ -217,24 +218,32 @@ const reconstruct = (obj, ...classes) => {
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
   const map = new Map()
-  function compdesc (descriptors) {
+  function compdesc (descriptors, only) {
     // compose/create descriptors
-    const xetters = new Map()
-    Object.entries(descriptors || {}).forEach(([name, desc]) => {
+    const newdesc = {}
+    Object.entries(descriptors || {})
+      .filter(([name, desc]) => !only || name === only )
+      .forEach(([name, desc]) => {
       for (const key of ['value', 'get', 'set']) {
         if (key in desc) {
           if (key === 'value') desc[key] = compose(desc[key])
           else {
-            xetters.set({ name, key }, compose(desc[key]))
-            delete desc[key]
+            console.log(`${key}:${desc[key]}`, compose(desc[key]))
+            // const fn = new Function('return ' + compose(desc[key]))
+            const xgetter = compose(desc[key])
+            console.log('xgetter:', xgetter)
+            const fn = new Function('return ' + xgetter)
+            console.log('fn:', fn)
+            console.log('fn.toString():', fn.toString())
+            desc[key] =  xgetter //fn //()
+            console.log(`after is ${key}:${desc[key]}`)
+            return
           }
         }
       }
+      newdesc[name] = desc
     })
-    return {
-      descriptors,
-      xetters
-    }
+    return newdesc
   }
 
   const refs = new Map()
@@ -249,41 +258,39 @@ const reconstruct = (obj, ...classes) => {
           const id = { __id__: obj._id}
           if (obj._class === 'Array') {
             const prototype = Object.getPrototypeOf([])
-            const descriptors = compdesc(obj._descriptors).descriptors
+            const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Set') {
             const prototype = Object.getPrototypeOf(new Set())
-            const descriptors = compdesc(obj._descriptors).descriptors
+            const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Map') {
             const prototype = Object.getPrototypeOf(new Map())
-            const descriptors = compdesc(obj._descriptors).descriptors
+            const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._class === 'Object') {
             const prototype = Object.getPrototypeOf({})
-            const descriptors = compdesc(obj._descriptors).descriptors
+            const descriptors = compdesc(obj._descriptors)
             return Object.create(prototype, descriptors)
           } else if (obj._prototype) {
-            const proto = compose(obj._prototype)
-            const parent = proto.constructoriiiii instanceof Function ? new proto.constructor() : proto
-            const prototype = Object.getPrototypeOf(parent)
-            const preobj = Object.create(prototype)
-            console.log('parent:', parent)
-            console.log('parent.val:', parent.val)
-            const { descriptors, xetters } = compdesc(obj._descriptors)
-            console.log('descriptors', descriptors)
-            const newobj = Object.create(prototype, descriptors)
+            const prototype = compose(obj._prototype)
+            console.log('*************')
+            console.log('prototype:', prototype)
+            //const parent = proto.constructor instanceof Function ? new proto.constructor() : proto
+            //const prototype = Object.getPrototypeOf(parent)
+            const descriptors = compdesc(obj._descriptors)
+            console.log('descriptors:', descriptors)
+            const base = Object.create(prototype, descriptors)
+            console.log('base:', base)
+            const newobj = new base.constructor()
             console.log('newobj:', newobj)
-            xetters.forEach((v,k) => {
-              if (k.key === 'set') return
-              const parts = v.replace(/^[^(]+/,'')
-              const val = 'function ' + parts
-              Object.defineProperty(newobj, k.name, {
-                [k.key]: new Function('return ' + val)(),
-                enumerable: true,
-                configurable: true
+            Object.entries(descriptors)
+              .filter(([k,v]) => v && 'value' in v && !(v instanceof Function))
+              .forEach(([k, v]) => {
+                newobj[k] = v.value
               })
-            })
+            console.log('newobj after:', newobj)
+            console.log(Object.getOwnPropertyDescriptors(newobj))
             if (obj._parent && builtins[obj._parent]) {
               // Special cases where object is an instance of a sub class of a builtin object
               const parent = builtins[obj._parent].assembly(obj._value, compose)
@@ -305,7 +312,6 @@ const reconstruct = (obj, ...classes) => {
               map.set(builtinValue.name, [global[builtinValue.name]])
             }
             global[builtinValue.name] = builtinValue
-            console.log('global:', builtinValue.name)
           }
           return builtinValue
         } else {
