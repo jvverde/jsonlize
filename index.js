@@ -100,11 +100,11 @@ const decompDescriptors = (descriptors) => {
           if (key === 'value' || descriptor[key] === undefined) {
             descriptor[key] = decompose(descriptor[key])
           } else {
-            return
-            // descriptor[key] = {
-            //   _class: 'String',
-            //  _value: descriptor[key].toString().replace(/^[^(]+/,'function') //.replace(/^[sg]et /,'function ')
-            //}
+            console.log(key, '=>', descriptor[key])
+            descriptor[key] = {
+               _class: 'String',
+              _value: descriptor[key].toString().replace(/^[^(]+/,'function') //.replace(/^[sg]et /,'function ')
+            }
           }
         }
       }
@@ -218,6 +218,7 @@ const reconstruct = (obj, ...classes) => {
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
   const map = new Map()
+  const xgetter = new Map
   function compdesc (descriptors, only) {
     // compose/create descriptors
     const newdesc = {}
@@ -228,16 +229,9 @@ const reconstruct = (obj, ...classes) => {
         if (key in desc) {
           if (key === 'value') desc[key] = compose(desc[key])
           else {
-            console.log(`${key}:${desc[key]}`, compose(desc[key]))
-            // const fn = new Function('return ' + compose(desc[key]))
-            const xgetter = compose(desc[key])
-            console.log('xgetter:', xgetter)
-            const fn = new Function('return ' + xgetter)
-            console.log('fn:', fn)
-            console.log('fn.toString():', fn.toString())
-            desc[key] =  xgetter //fn //()
-            console.log(`after is ${key}:${desc[key]}`)
-            return
+            const fnstring = compose(desc[key])
+            desc[key] =  function () {}
+            xgetter.set(desc[key], fnstring)
           }
         }
       }
@@ -285,12 +279,36 @@ const reconstruct = (obj, ...classes) => {
             const newobj = new base.constructor()
             console.log('newobj:', newobj)
             Object.entries(descriptors)
-              .filter(([k,v]) => v && 'value' in v && !(v instanceof Function))
+              .filter(([k,v]) => v && 'value' in v && !(v instanceof Function) && k !== 'constructor')
               .forEach(([k, v]) => {
+                console.log(k, v.value)
                 newobj[k] = v.value
               })
+            Object.entries(descriptors)
+              .filter(([k,v]) => v && 'get' in v)
+              .forEach(([k,v]) => {
+                const fnstring = xgetter.get(v.get)
+                console.log(k, '=>', v.get.toString(), 'fnstring:', fnstring)
+                const fn = function() {
+                  const f = new Function('return ' + fnstring)()
+                  console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', f)
+                  return f()
+                }
+                v.get = fn
+                Object.defineProperty(Object.getPrototypeOf(newobj), k, v)
+              })
+
             console.log('newobj after:', newobj)
-            console.log(Object.getOwnPropertyDescriptors(newobj))
+            try {
+              const d = Object.getOwnPropertyDescriptors(newobj)
+              console.log('xxx:', d)
+              if (d && d.val && d.val.get) {
+                //console.log('GET is', d.val.get.toString())
+                //console.log('res:', newobj.val)
+              }
+            } catch (e) {
+              console.warn(e)
+            }
             if (obj._parent && builtins[obj._parent]) {
               // Special cases where object is an instance of a sub class of a builtin object
               const parent = builtins[obj._parent].assembly(obj._value, compose)
