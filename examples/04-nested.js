@@ -20,9 +20,9 @@ assert(10 === w.x.f(4))
 assert(6 === y.x.f(4))
 assert(16 === w.x.g(4))
 
-// const a = {x, y, z}
-// const c = serdes(a)
-// console.log(a)
-// console.log(c)
+const a = {x, y, z}
+const c = serdes(a)
+console.log(a)
+console.log(c)
 // assert(a.x.i === c.y.x.i)
 // assert(a.x.i === c.z.x.i)
