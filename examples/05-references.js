@@ -1,10 +1,9 @@
 'use strict'
 const { serialize, deserialize } = require('../index')
 const assert = require('assert').strict
-const { isClone, isLike } = require('isClone')
+const { isClone } = require('isClone')
 
 const serdes = (v) => deserialize(serialize(v))
-
 
 const x = { i: 1 }
 const y = { x }
