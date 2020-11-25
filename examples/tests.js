@@ -82,7 +82,14 @@ console.log(c)
 console.log(b.base, c.base)
 console.log(b.val, c.val)
 
-//getAllProtoChain(c)
+/*console.log('_________________')
+getAllProtoChain({})
+console.log('_________________')
+getAllProtoChain(Object)
+console.log('_________________')
+getAllProtoChain(Object.prototype)
+console.log('_________________')
+getAllProtoChain(Object.getPrototypeOf({}))*/
 /*
 const x = {
   i: 0,
