@@ -88,13 +88,15 @@ const deconstruct = (obj) => {
         const ref = getRef(obj)
         if (ref instanceof Object) return ref
         const _id = ref
+        const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
+        const _value = builtins[_class].dismantle(obj, decompose)
         return {
           _id,
           _class,
-          _value: builtins[_class].dismantle(obj, decompose)
+          _descriptors,
+          _value
         }
       } else if ([Array, Set, Map].includes(obj.constructor) /*|| obj.constructor === Object*/) {
-        console.log('obj.constructor', obj.constructor)
         const ref = getRef(obj)
         if (ref instanceof Object) return ref
         const _id = ref
@@ -147,13 +149,14 @@ const reconstruct = (obj, ...classes) => {
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
   const map = new Map()
-  function compdesc (descriptors, only) {
+  function compdesc (descriptors) {
     // compose/create descriptors
     const newdesc = {}
     Object.entries(descriptors || {})
       .forEach(([name, desc]) => {
       for (const key of ['value', 'get', 'set']) {
         if (key in desc) {
+          // console.log(key, '=>', desc[key])
           desc[key] = compose(desc[key])
         }
       }
@@ -170,11 +173,15 @@ const reconstruct = (obj, ...classes) => {
   }
   const refs = new Map()
   function compose (obj) {
-    const registerAndCompose = (newobj) => {
-      if (typeof obj === 'object' && '_id' in obj) {
+    // console.log('obj._class =', obj._class)
+    const register = newobj => {
+      if (obj && '_id' in obj) {
         console.log('register', obj._id)
         refs.set(obj._id, newobj)
       }
+    }
+    const registerAndCompose = (newobj) => {
+      register(newobj)
       const descriptors = compdesc(obj._descriptors)
       applyProperties(newobj, descriptors)
       return newobj
@@ -192,16 +199,26 @@ const reconstruct = (obj, ...classes) => {
         }
         console.warn(`Didn't find a ref ${obj._ref} in refs map`)
         return obj
-      } else if (obj && typeof obj === 'object' && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
-        if (obj._descriptors) {
+      } else if (obj && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
+        if (obj._class === 'Set') {
+          const set = new Set()
+          registerAndCompose(set)
+          const newset = builtins[obj._class].assembly(obj._value, compose)
+          newset.forEach((v) => {
+            set.add(v)
+          })
+          return set
+        } else if (obj._class === 'Map') {
+          const map = new Map()
+          registerAndCompose(map)
+          const newmap = builtins[obj._class].assembly(obj._value, compose)
+          newmap.forEach((v, k) => {
+            map.set(k, v)
+          })
+          return map
+        } else if (obj._descriptors) {
           if (obj._class === 'Array') {
             const prototype = Object.getPrototypeOf([])
-            return createObject(prototype)
-          } else if (obj._class === 'Set') {
-            const prototype = Object.getPrototypeOf(new Set())
-            return createObject(prototype)
-          } else if (obj._class === 'Map') {
-            const prototype = Object.getPrototypeOf(new Map())
             return createObject(prototype)
           } else if (obj._class === 'Object') {
             const prototype = compose(obj._prototype)
@@ -232,6 +249,7 @@ const reconstruct = (obj, ...classes) => {
             }
             global[builtinValue.name] = builtinValue
           }
+          register(builtinValue)
           return builtinValue
         } else {
           console.log("SHOULDN't HAPPEN EITHER")
