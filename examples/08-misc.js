@@ -30,5 +30,6 @@ const serdes = (v) => deserialize(serialize(v))
   console.log(json)
   const newobj = serdes(obj)
   console.log(newobj)
+  assert(isClone(obj, newobj))
 })()
 
