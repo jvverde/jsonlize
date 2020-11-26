@@ -35,9 +35,9 @@ function getTypeValue (obj) {
 }
 
 const deconstruct = (obj) => {
-  const decompDescriptors = (descriptors) => {
+  const decompDescriptors = (descriptors = {}) => {
     const newdescs = {}
-    Object.entries(descriptors || {})
+    Object.entries(descriptors)
       // discard descriptors present in default Object prototype
       .filter(([name, descriptor]) => !isClone(descriptor, defaultdescriptors[name]))
       .forEach(([name, descriptor]) => {
@@ -96,16 +96,14 @@ const deconstruct = (obj) => {
           _descriptors,
           _value
         }
-      } else if ([Array, Set, Map].includes(obj.constructor) /*|| obj.constructor === Object*/) {
+      } else if (Array === obj.constructor /*|| obj.constructor === Object*/) {
         const ref = getRef(obj)
         if (ref instanceof Object) return ref
         const _id = ref
-        // const _prototype = decompose(Object.getPrototypeOf(obj), true)
         const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
         return {
           _id,
           _class,
-          // _prototype,
           _descriptors
         }
       } else {
@@ -149,22 +147,18 @@ const reconstruct = (obj, ...classes) => {
   classes.forEach(c => { lookup[c.name] = c.prototype })
 
   const map = new Map()
-  function compdesc (descriptors) {
-    // compose/create descriptors
-    const newdesc = {}
+  function compdesc (descriptors = {}) {
     Object.entries(descriptors || {})
       .forEach(([name, desc]) => {
       for (const key of ['value', 'get', 'set']) {
-        if (key in desc) {
-          // console.log(key, '=>', desc[key])
+        if (desc && key in desc) {
           desc[key] = compose(desc[key])
         }
       }
-      newdesc[name] = desc
     })
-    return newdesc
+    return descriptors
   }
-  const applyProperties = (newobj, descriptors) => {
+  const applyProperties = (newobj, descriptors = {}) => {
     Object.entries(descriptors)
       .forEach(([name, props]) => {
         Object.defineProperty(newobj , name, props)
@@ -192,79 +186,77 @@ const reconstruct = (obj, ...classes) => {
     }
 
     if (obj && obj._class && string2gp.has(obj._class)) { return string2gp.get(obj._class) }
-    try {
-      if (obj && typeof obj === 'object' && '_ref' in obj) {
-        if (refs.has(obj._ref)) {
-          return refs.get(obj._ref)
-        }
-        console.warn(`Didn't find a ref ${obj._ref} in refs map`)
-        return obj
-      } else if (obj && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
-        if (obj._class === 'Set') {
-          const set = new Set()
-          registerAndCompose(set)
-          const newset = builtins[obj._class].assembly(obj._value, compose)
-          newset.forEach((v) => {
-            set.add(v)
-          })
-          return set
-        } else if (obj._class === 'Map') {
-          const map = new Map()
-          registerAndCompose(map)
-          const newmap = builtins[obj._class].assembly(obj._value, compose)
-          newmap.forEach((v, k) => {
-            map.set(k, v)
-          })
-          return map
-        } else if (obj._descriptors) {
-          if (obj._class === 'Array') {
-            const prototype = Object.getPrototypeOf([])
-            return createObject(prototype)
-          } else if (obj._class === 'Object') {
-            const prototype = compose(obj._prototype)
-            const newobj = prototype !== null ? {} : Object.prototype // for classes
-            return registerAndCompose(newobj)
-          } else if (obj._prototype !== undefined) {
-            const prototype = compose(obj._prototype)
-            const newobj = createObject(prototype)
-            if (obj._parent && builtins[obj._parent]) {
-              // Special cases where object is an instance of a sub class of a builtin object
-              const parent = builtins[obj._parent].assembly(obj._value, compose)
-              const base = new newobj.constructor(parent)
-              return Object.assign(base, newobj)
-            }
-            return newobj
-          } else {
-            console.log("SHOULDN't HAPPEN")
-          }
-        } else if (builtins[obj._class]) {
-          // for builtin objects
-          const builtinValue = builtins[obj._class].assembly(obj._value, compose)
-          if (obj._class === 'Function' && builtinValue && builtinValue.name) {
-            // temporary publish on global scope the named functions and classes
-            if (map.has(builtinValue.name)) {
-              map.get(builtinValue.name).push(global[builtinValue.name])
-            } else {
-              map.set(builtinValue.name, [global[builtinValue.name]])
-            }
-            global[builtinValue.name] = builtinValue
-          }
-          register(builtinValue)
-          return builtinValue
-        } else {
-          console.log("SHOULDN't HAPPEN EITHER")
-        }
+    if (obj && typeof obj === 'object' && '_ref' in obj) {
+      if (refs.has(obj._ref)) {
+        return refs.get(obj._ref)
       }
+      console.warn(`Didn't find a ref ${obj._ref} in refs map`)
       return obj
-      // if (lookup[obj._class]) { // check if it is a user defined class
-      //  const prototype = lookup[obj._class]
-      //  const children = compose(obj._value)
-      //  const descriptors = Object.getOwnPropertyDescriptors(children)
-      //  return Object.create(prototype, descriptors)
-      // }
-    } catch (e) {
-      console.warn(e)
+    } else if (obj && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
+      if (obj._class === 'Set') {
+        const set = new Set()
+        registerAndCompose(set)
+        const newset = builtins[obj._class].assembly(obj._value, compose)
+        newset.forEach((v) => {
+          set.add(v)
+        })
+        return set
+      } else if (obj._class === 'Map') {
+        const map = new Map()
+        registerAndCompose(map)
+        const newmap = builtins[obj._class].assembly(obj._value, compose)
+        newmap.forEach((v, k) => {
+          map.set(k, v)
+        })
+        return map
+      } else if (obj._class === 'Array') {
+          const prototype = Object.getPrototypeOf([])
+          return createObject(prototype)
+      } else if (obj._class === 'Object') {
+        const prototype = compose(obj._prototype)
+        const newobj = prototype !== null ? {} : Object.prototype // for classes
+        return registerAndCompose(newobj)
+      } else if (obj._prototype !== undefined) {
+        const prototype = compose(obj._prototype)
+        const newobj = createObject(prototype)
+        if (obj._parent && builtins[obj._parent]) {
+          // Special cases where object is an instance of a sub class of a builtin object
+          const parent = builtins[obj._parent].assembly(obj._value, compose)
+          try {
+            const base = new newobj.constructor(parent)
+            return Object.assign(base, newobj)
+          } catch (e) {
+            console.warn('Error while trying to create a instance of', (newobj.constructor || {}).name)
+            console.warn(e)
+            return newobj
+          }
+        }
+        return newobj
+      } else if (builtins[obj._class]) {
+        // for builtin objects
+        const builtinValue = builtins[obj._class].assembly(obj._value, compose)
+        if (obj._class === 'Function' && builtinValue && builtinValue.name) {
+          // temporary publish on global scope the named functions and classes
+          if (map.has(builtinValue.name)) {
+            map.get(builtinValue.name).push(global[builtinValue.name])
+          } else {
+            map.set(builtinValue.name, [global[builtinValue.name]])
+          }
+          global[builtinValue.name] = builtinValue
+        }
+        register(builtinValue)
+        return builtinValue
+      } else {
+        console.log("SHOULDN't HAPPEN EITHER")
+      }
     }
+    return obj
+    // if (lookup[obj._class]) { // check if it is a user defined class
+    //  const prototype = lookup[obj._class]
+    //  const children = compose(obj._value)
+    //  const descriptors = Object.getOwnPropertyDescriptors(children)
+    //  return Object.create(prototype, descriptors)
+    // }
   }
   const result = compose(obj)
   ;[...map.entries()].forEach(([k, v]) => {
