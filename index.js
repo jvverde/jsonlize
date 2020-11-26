@@ -8,6 +8,10 @@ const basicTypes = [Number, String, Boolean]
 // Get default descriptors of Object prototype
 const defaultdescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf({}))
 
+// Global properties
+const gp2string = new Map([[undefined, 'undefined'], [Infinity, 'Infinity'], [NaN, 'NaN'], [Math, 'Math']])
+const string2gp = new Map([['undefined', undefined], ['Infinity', Infinity], ['NaN', NaN], ['Math', Math]])
+
 function isInstanceOf (obj, type) { // Check if object is instance of a given type
   while (obj) {
     if (obj.constructor && obj.constructor.name === type) return true
@@ -17,7 +21,7 @@ function isInstanceOf (obj, type) { // Check if object is instance of a given ty
 }
 const bTypesNames = Object.keys(builtins) // Avoid to get it everytime
 function getTypeValue (obj) {
-  try { // Avoid TypeError: Number.prototype.valueOf requires that 'this' be a Number
+  try { // Avoid TypeError: Number.prototype.valueOf requires that 'this' to be a Number
     for (const typename of bTypesNames) {
       if (isInstanceOf(obj, typename)) {
         return {
@@ -29,10 +33,6 @@ function getTypeValue (obj) {
   } catch (e) {}
   return {}
 }
-
-// Global properties
-const gp2string = new Map([[undefined, 'undefined'], [Infinity, 'Infinity'], [NaN, 'NaN'], [Math, 'Math']])
-const string2gp = new Map([['undefined', undefined], ['Infinity', Infinity], ['NaN', NaN], ['Math', Math]])
 
 const deconstruct = (obj) => {
   const decompDescriptors = (descriptors) => {
@@ -61,7 +61,15 @@ const deconstruct = (obj) => {
 
   const memoir = new Map()
   let id = 0
-
+  const getRef = obj => {
+    if (memoir.has(obj)) {
+      return {
+        _ref: memoir.get(obj)
+      }
+    }
+    memoir.set(obj, ++id)
+    return id
+  }
   const decompose = (obj, isPrototype = false) => {
     if (gp2string.has(obj)) {
       return { _class: gp2string.get(obj) }
@@ -81,37 +89,26 @@ const deconstruct = (obj) => {
           _class,
           _value: builtins[_class].dismantle(obj, decompose)
         }
-      } else if (obj.constructor === Array /*|| obj.constructor === Object*/) {
-        let _id
-        if (!isPrototype) { // Don't do this for prototypes
-          if (memoir.has(obj)) {
-            // console.log('Found memoir', obj, '=>', memoir.get(obj))
-            return {
-              _ref: memoir.get(obj)
-            }
-          }
-          _id = id++
-          // console.log('memoir', obj, '=>', _id)
-          memoir.set(obj, _id)
-        }
+      } else if ([Array, Set, Map].includes(obj.constructor) /*|| obj.constructor === Object*/) {
+        const ref = getRef(obj)
+        if (ref instanceof Object) return ref
+        const _id = ref
+        // const _prototype = decompose(Object.getPrototypeOf(obj), true)
+        const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
         return {
           _id,
           _class,
-          _prototype: decompose(Object.getPrototypeOf(obj), true),
-          _descriptors: decompDescriptors(Object.getOwnPropertyDescriptors(obj))
+          // _prototype,
+          _descriptors
         }
       } else {
-        let _value, _parent, _id
+        let _value, _parent
+        const ref = getRef(obj)
+        if (ref instanceof Object) return ref
+        const _id = ref
+
         if (!isPrototype) { // Don't do this for prototypes
-          if (memoir.has(obj)) {
-            // console.log('Found memoir(2)', obj, '=>', memoir.get(obj))
-            return {
-              _ref: memoir.get(obj)
-            }
-          }
-          _id = id++
-          // console.log('memoir(2)', obj, '=>', _id)
-          memoir.set(obj, _id)
+
           if (obj instanceof Set) {
             _parent = 'Set'
             _value = [...obj].map(v => decompose(v))
@@ -124,8 +121,8 @@ const deconstruct = (obj) => {
             _parent = type
           }
         }
-        const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
         const _prototype = decompose(Object.getPrototypeOf(obj), true)
+        const _descriptors = decompDescriptors(Object.getOwnPropertyDescriptors(obj))
         return {
           _id,
           _class,
@@ -170,6 +167,7 @@ const reconstruct = (obj, ...classes) => {
   function compose (obj) {
     const registerAndCompose = (newobj) => {
       if (typeof obj === 'object' && '_id' in obj) {
+        // console.log('register', obj._id)
         refs.set(obj._id, newobj)
       }
       const descriptors = compdesc(obj._descriptors)

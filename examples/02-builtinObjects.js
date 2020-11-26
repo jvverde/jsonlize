@@ -48,6 +48,10 @@ assert(1 === newmap.get('a'))
 ;// semi comma is needed here
 (function () {
   const map = new Map([[sqr,1], [obj, 2]])
+  // const json = serialize(map)
+  // console.log(json)
+  // const c = deserialize(json)
+
   const newmap = serdes(map)
   assert(isLike(map, newmap))
   assert(!newmap.has(obj))  // the 'obj' on map was cloned, so the original 'obj' is not in newmap

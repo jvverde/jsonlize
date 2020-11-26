@@ -27,6 +27,10 @@ const serdes = (v) => deserialize(serialize(v))
   x.z = z
   y.z = z
 
+  // const json = serialize(z)
+  // console.log(json)
+  // const c = deserialize(json)
+  // console.log(c)
   const c = serdes(z)
 
   assert(isClone(c,z))
@@ -37,6 +41,4 @@ const serdes = (v) => deserialize(serialize(v))
   assert(c.x === c.y.x)
   assert(c.y.x.z === c)
   assert(c.x.y.z === c)
-  //  assert(y.r === y)
 })()
-//const z = { x }
