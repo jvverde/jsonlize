@@ -34,6 +34,15 @@ const newarray = serdes(array)
 assert(isClone(array, newarray))
 assert(2 === newarray[1])
 
+;// semi comma is needed here
+(function () {
+  const array = new Array(5)
+  const newarray = serdes(array)
+  assert(isClone(array, newarray))
+  assert(5 === newarray.length)
+  assert(undefined === newarray[1])
+})()
+
 const set = new Set([3,5])
 const newset = serdes(set)
 assert(isClone(set, newset))
@@ -48,10 +57,6 @@ assert(1 === newmap.get('a'))
 ;// semi comma is needed here
 (function () {
   const map = new Map([[sqr,1], [obj, 2]])
-  // const json = serialize(map)
-  // console.log(json)
-  // const c = deserialize(json)
-
   const newmap = serdes(map)
   assert(isLike(map, newmap))
   assert(!newmap.has(obj))  // the 'obj' on map was cloned, so the original 'obj' is not in newmap
