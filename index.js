@@ -85,11 +85,16 @@ const deconstruct = (obj) => {
             _value: []
           }
         }
+        const ref = getRef(obj)
+        if (ref instanceof Object) return ref
+        const _id = ref
         return {
+          _id,
           _class,
           _value: builtins[_class].dismantle(obj, decompose)
         }
       } else if ([Array, Set, Map].includes(obj.constructor) /*|| obj.constructor === Object*/) {
+        console.log('obj.constructor', obj.constructor)
         const ref = getRef(obj)
         if (ref instanceof Object) return ref
         const _id = ref
@@ -167,7 +172,7 @@ const reconstruct = (obj, ...classes) => {
   function compose (obj) {
     const registerAndCompose = (newobj) => {
       if (typeof obj === 'object' && '_id' in obj) {
-        // console.log('register', obj._id)
+        console.log('register', obj._id)
         refs.set(obj._id, newobj)
       }
       const descriptors = compdesc(obj._descriptors)

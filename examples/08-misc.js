@@ -16,8 +16,10 @@ const serdes = (v) => deserialize(serialize(v))
   y.x = x
   const z = {x, y}
   x.z = y.z = z
-  const set = new Set([x,y,z])
-  const map = new Map([[x, set], [y, set]])
+  const set = new Set([1,2,3])
+  const map = new Map([[1, set], [2, set]])
+  set.add(4)
+  assert(map.get(1) === map.get(2))
   //map.set(map, set)
   const array = [ undefined, null, Infinity, NaN, Math, 1, 'a', x, y, z, set, map]
   const obj = {
@@ -25,11 +27,12 @@ const serdes = (v) => deserialize(serialize(v))
     map,
     set
   }
-  console.log(obj)
-  const json = serialize(obj)
+  console.log(map)
+  const json = serialize(map)
   console.log(json)
-  const newobj = serdes(obj)
+  const newobj = serdes(map)
+  //assert(newobj.get(1) === newobj.get(2))
   console.log(newobj)
-  assert(isClone(obj, newobj))
+  console.log(isClone(map, newobj, { debug: true}))
 })()
 
