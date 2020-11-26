@@ -241,66 +241,61 @@ const reconstruct = (obj, ...classes) => {
     })
     return newdesc
   }
-
+  const applyProperties = (newobj, descriptors) => {
+    Object.entries(descriptors)
+      .forEach(([name, props]) => {
+        Object.defineProperty(newobj , name, props)
+      })
+    return newobj
+  }
   const refs = new Map()
   function compose (obj) {
+    const registerAndCompose = (newobj) => {
+      if (typeof obj === 'object' && '_id' in obj) {
+        refs.set(obj._id, newobj)
+      }
+      const descriptors = compdesc(obj._descriptors)
+      applyProperties(newobj, descriptors)
+      return newobj
+    }
+    const createObject = prototype => {
+      const newobj = Object.create(prototype)
+      return registerAndCompose(newobj)
+    }
+
     if (obj && obj._class && string2gp.has(obj._class)) { return string2gp.get(obj._class) }
     try {
-      if (obj && obj._ref) {
+      if (obj && typeof obj === 'object' && '_ref' in obj) {
         if (refs.has(obj._ref)) {
           return refs.get(obj._ref)
         }
         console.warn(`Didn't find a ref ${obj._ref} in refs map`)
         return obj
-      } else if (obj && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
-        const mapobj = (newobj) => {
-          if ('_id' in obj) refs.set(obj._id, newobj)
-          return newobj
-        }
+      } else if (obj && typeof obj === 'object' && obj._class && /* Just to make really sure */ typeof obj._class === 'string') {
         if (obj._descriptors) {
           if (obj._class === 'Array') {
             const prototype = Object.getPrototypeOf([])
-            const descriptors = compdesc(obj._descriptors)
-            return mapobj(Object.create(prototype, descriptors))
+            return createObject(prototype)
           } else if (obj._class === 'Set') {
             const prototype = Object.getPrototypeOf(new Set())
-            const descriptors = compdesc(obj._descriptors)
-            return mapobj(Object.create(prototype, descriptors))
+            return createObject(prototype)
           } else if (obj._class === 'Map') {
             const prototype = Object.getPrototypeOf(new Map())
-            const descriptors = compdesc(obj._descriptors)
-            return mapobj(Object.create(prototype, descriptors))
+            return createObject(prototype)
           } else if (obj._class === 'Object') {
             const prototype = compose(obj._prototype)
-            const descriptors = compdesc(obj._descriptors)
-            const newobj = prototype !== null ? {} : Object.prototype //for classes
-            Object.entries(descriptors)
-              .forEach(([name,props]) => {
-                Object.defineProperty(newobj , name, props)
-              })
-            return mapobj(newobj)
+            const newobj = prototype !== null ? {} : Object.prototype // for classes
+            return registerAndCompose(newobj)
           } else if (obj._prototype !== undefined) {
             const prototype = compose(obj._prototype)
-            // console.log('*************')
-            // console.log('prototype:', prototype)
-            const descriptors = compdesc(obj._descriptors)
-            // console.log('descriptors:', descriptors)
-            const newobj = Object.create(prototype)
-            // console.log('newobj:', newobj)
-            Object.entries(descriptors)
-              .forEach(([name,props]) => {
-                // console.log(name, '=>', props)
-                Object.defineProperty(newobj , name, props)
-              })
-
-            // console.log('newobj after:', newobj)
+            const newobj = createObject(prototype)
             if (obj._parent && builtins[obj._parent]) {
               // Special cases where object is an instance of a sub class of a builtin object
               const parent = builtins[obj._parent].assembly(obj._value, compose)
               const base = new newobj.constructor(parent)
-              return mapobj(Object.assign(base, newobj))
+              return Object.assign(base, newobj)
             }
-            return mapobj(newobj)
+            return newobj
           } else {
             console.log("SHOULDN't HAPPEN")
           }
