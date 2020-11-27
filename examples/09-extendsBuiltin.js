@@ -45,10 +45,12 @@ class Long extends Int {
   assert(m.count === 2)
 })()
 
-//const n = new Int(3)
-//const m = new Number(6)
-//console.log(Object.assign(m, n))
-//console.log(m.label)
+const n = new Int(3)
+const m = new Number(6)
+const r = Object.assign(n, m)
+console.log(r)
+console.log(r | 0)
+console.log(r.label)
 
 
 /*
