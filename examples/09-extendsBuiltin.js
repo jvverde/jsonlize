@@ -11,6 +11,7 @@ class A extends Number {
     this._src = i
     this._self = this
   }
+  a = function (){}
 }
   // f(a) { return this + a }
   // g = a => a * a
