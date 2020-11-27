@@ -45,6 +45,12 @@ class Long extends Int {
   assert(m.count === 2)
 })()
 
+//const n = new Int(3)
+//const m = new Number(6)
+//console.log(Object.assign(m, n))
+//console.log(m.label)
+
+
 /*
 class Sset extends Set {
   constructor (s) {
