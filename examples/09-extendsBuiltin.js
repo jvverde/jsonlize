@@ -8,43 +8,38 @@ const serdes = (v) => deserialize(serialize(v))
 class A extends Number {
   constructor (i = 0) {
     super(i | 0)
+    this._src = i
+    this._self = this
   }
   f(a) { return this + a }
-  g = this.f
-  h = a => a * a
-  i = this.g
-  j = function() {return 3 + this }
-  k = this.j
+  g = a => a * a
+  h = this.g
+  //a = function (){}
+  //b = this.a
+  get exact () { return this == this._src}
+  get self () {return this._self}
+  get even () {return this % 2 === 0}
+  get odd () {return this % 2 === 1}
 }
-    // this._src = i
-    // this._self = this
-  // g = a => a * a
-  // h = this.g
-  // get exact () { return this == this._src}
-  // get self () {return this._self}
-  // get even () {return this % 2 === 0}
-  // get odd () {return this % 2 === 1}
 
 (function (){
   const x = 6.1
   const y = new A(x)
-  // const z = serdes(y)
-  // assert(isLike(z, y))
-  // assert(z.even)
-  // assert(!z.odd)
-  // assert(!z.exact)
-  // assert(9 === z.f(3))
-  // assert(9 === z.g(3))
-  // assert(9 === z.h(3))
-  // assert(y.h === y.g)
-  // assert(z.h === z.g)
-  // assert(y.i === y.f)
-  // assert(z.i === z.f)
+  //const z = serdes(y)
   const json = serialize(y)
   console.log(json)
-  const z = deserialize(y)
+  const z = deserialize(json)
   console.log(y)
   console.log(z)
+  assert(isLike(z, y))
+  assert(z.even)
+  assert(!z.odd)
+  assert(!z.exact)
+  assert(9 === z.f(3))
+  assert(9 === z.g(3))
+  assert(9 === z.h(3))
+  assert(y.h === y.g)
+  assert(z.h === z.g)
 })()
 const showChain = require('./lib/showPrototypeChain')
 const getProps = require('./lib/getAllPropertyNames')
