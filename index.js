@@ -2,8 +2,7 @@
 const deconstruct = require('./lib/deconstruct')
 const reconstruct = require('./lib/reconstruct')
 
-
-function serialize (object) {
+const serialize = object => {
   if (arguments.length === 0) return
   return JSON.stringify(deconstruct(object))
 }
@@ -13,3 +12,4 @@ const deserialize = (json, ...classes) => {
 
 module.exports.serialize = serialize
 module.exports.deserialize = deserialize
+module.exports.deepclone = obj => deserialize(serialize(obj))
