@@ -5,26 +5,46 @@ const { isClone, isLike } = require('isClone')
 
 const serdes = (v) => deserialize(serialize(v))
 
-class Int extends Number {
+class A extends Number {
   constructor (i = 0) {
     super(i | 0)
-    this._base = { i, self: this }
   }
-  get src () {return this._base}
-  get even () {return this % 2 === 0}
-  get odd () {return this % 2 === 1}
+  f(a) { return this + a }
+  g = this.f
+  h = a => a * a
+  i = this.g
+  j = function() {return 3 + this }
+  k = this.j
 }
+    // this._src = i
+    // this._self = this
+  // g = a => a * a
+  // h = this.g
+  // get exact () { return this == this._src}
+  // get self () {return this._self}
+  // get even () {return this % 2 === 0}
+  // get odd () {return this % 2 === 1}
 
 (function (){
-  const x = 6.9
-  const i = new Int(x)
-  const json = serialize(i)
+  const x = 6.1
+  const y = new A(x)
+  // const z = serdes(y)
+  // assert(isLike(z, y))
+  // assert(z.even)
+  // assert(!z.odd)
+  // assert(!z.exact)
+  // assert(9 === z.f(3))
+  // assert(9 === z.g(3))
+  // assert(9 === z.h(3))
+  // assert(y.h === y.g)
+  // assert(z.h === z.g)
+  // assert(y.i === y.f)
+  // assert(z.i === z.f)
+  const json = serialize(y)
   console.log(json)
-  const n = deserialize(json)
-  console.log(i)
-  console.log(n)
-  //assert(n.even)
-  //assert(isLike(n, i))
+  const z = deserialize(y)
+  console.log(y)
+  console.log(z)
 })()
 const showChain = require('./lib/showPrototypeChain')
 const getProps = require('./lib/getAllPropertyNames')
@@ -52,7 +72,7 @@ const getProps = require('./lib/getAllPropertyNames')
 // const r = Object.assign(n,m)
 // console.log(r)
 
-class Long extends Int {
+class Long extends A {
   constructor (i = 5) {
     super(i)
     this.cnt = 0
