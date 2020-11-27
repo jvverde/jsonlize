@@ -13,6 +13,8 @@ class A extends Number {
   }
   a = function (){}
 }
+  // b = this.a
+  // c = a => a * a
   // f(a) { return this + a }
   // g = a => a * a
   // h = this.g
@@ -32,7 +34,7 @@ class A extends Number {
   const z = deserialize(json)
   console.log(y)
   console.log(z)
-  // assert(isLike(z, y))
+  assert(isLike(z, y))
   // assert(z.even)
   // assert(!z.odd)
   // assert(!z.exact)
