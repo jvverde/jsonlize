@@ -14,7 +14,7 @@ class A extends Number {
   f(a) { return this + a }
   g = a => a * a
   h = this.g
-  //a = function (){}
+  a = function (){}
   //b = this.a
   get exact () { return this == this._src}
   get self () {return this._self}
