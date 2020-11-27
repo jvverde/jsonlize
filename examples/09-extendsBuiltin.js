@@ -11,16 +11,16 @@ class A extends Number {
     this._src = i
     this._self = this
   }
-  //a = function (){}
-  //b = this.a
-  get exact () { return this == this._src}
-  get self () {return this._self}
-  get even () {return this % 2 === 0}
-  get odd () {return this % 2 === 1}
 }
   // f(a) { return this + a }
   // g = a => a * a
   // h = this.g
+  //a = function (){}
+  //b = this.a
+  // get exact () { return this == this._src}
+  // get self () {return this._self}
+  // get even () {return this % 2 === 0}
+  // get odd () {return this % 2 === 1}
 
 (function (){
   const x = 6.1
@@ -31,15 +31,15 @@ class A extends Number {
   const z = deserialize(json)
   console.log(y)
   console.log(z)
-  assert(isLike(z, y))
-  assert(z.even)
-  assert(!z.odd)
-  assert(!z.exact)
-  assert(9 === z.f(3))
-  assert(9 === z.g(3))
-  assert(9 === z.h(3))
-  assert(y.h === y.g)
-  assert(z.h === z.g)
+  // assert(isLike(z, y))
+  // assert(z.even)
+  // assert(!z.odd)
+  // assert(!z.exact)
+  // assert(9 === z.f(3))
+  // assert(9 === z.g(3))
+  // assert(9 === z.h(3))
+  // assert(y.h === y.g)
+  // assert(z.h === z.g)
 })()
 const showChain = require('./lib/showPrototypeChain')
 const getProps = require('./lib/getAllPropertyNames')
