@@ -11,16 +11,16 @@ class A extends Number {
     this._src = i
     this._self = this
   }
-  f(a) { return this + a }
-  g = a => a * a
-  h = this.g
-  a = function (){}
+  //a = function (){}
   //b = this.a
   get exact () { return this == this._src}
   get self () {return this._self}
   get even () {return this % 2 === 0}
   get odd () {return this % 2 === 1}
 }
+  // f(a) { return this + a }
+  // g = a => a * a
+  // h = this.g
 
 (function (){
   const x = 6.1
