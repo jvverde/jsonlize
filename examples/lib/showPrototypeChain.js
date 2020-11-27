@@ -1,5 +1,6 @@
 // show all prototype chain
 function getAllProtoChain(obj, tab='') {
+  if (!obj) return
   const props = Object.getOwnPropertyDescriptors(obj)
   const symbols = Object.getOwnPropertySymbols(obj)
   const proto = Object.getPrototypeOf(obj)
@@ -12,6 +13,6 @@ function getAllProtoChain(obj, tab='') {
   console.log(`${tab}props.constructor.value.toString()::`, (props.constructor.value || '').toString())
   // console.log(`${tab}symbols::`, symbols)
   if (proto) console.log(`${tab}props::`, props)
-  if (proto) getAllProtoChain(proto, tab + '>>')
+  getAllProtoChain(proto, tab + '>>')
 }
 module.exports = getAllProtoChain

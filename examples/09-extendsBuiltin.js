@@ -7,38 +7,51 @@ const serdes = (v) => deserialize(serialize(v))
 
 class Int extends Number {
   constructor (i = 0) {
-    super(i)
-    this.label = 'int'
+    super(i | 0)
+    this._base = { i, self: this }
   }
-
-  get tag () { return this.label }
-  get int () { return this }
+  get src () {return this._base}
+  get even () {return this % 2 === 0}
+  get odd () {return this % 2 === 1}
 }
 
 (function (){
-  const x = 7
+  const x = 6.9
   const i = new Int(x)
   const json = serialize(i)
   console.log(json)
   const n = deserialize(json)
   console.log(i)
   console.log(n)
-  assert(n.int == 7)
-  assert(n.int | 0 === 7)
-  assert(n.tag === 'int')
-  assert(isLike(n, i))
+  //assert(n.even)
+  //assert(isLike(n, i))
 })()
 const showChain = require('./lib/showPrototypeChain')
+const getProps = require('./lib/getAllPropertyNames')
 // showChain(Object.getPrototypeOf({}))
 // console.log('--------------')
 // showChain(Object.prototype)
-showChain(Number.prototype)
-console.log('--------------')
-showChain(Math.prototype)
-console.log('--------------')
-showChain(RegExp.prototype)
-console.log('--------------')
-showChain(BigInt.prototype)
+// showChain(Number.prototype)
+// console.log('--------------')
+// showChain(Math.prototype)
+// console.log('--------------')
+// showChain(RegExp.prototype)
+// console.log('--------------')
+// showChain(BigInt.prototype)
+// let  n = new Number(9999999999999)
+// console.log(n)
+// console.log('---------------------')
+// showChain(n)
+// console.log('---------------------')
+// getProps(n).forEach(name => {
+//   console.log(name, '=>', n[name])
+// })
+// console.log('---------------------')
+// const m = new Number(7)
+// console.log(m)
+// const r = Object.assign(n,m)
+// console.log(r)
+
 class Long extends Int {
   constructor (i = 5) {
     super(i)
