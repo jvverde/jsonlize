@@ -28,10 +28,17 @@ class Int extends Number {
   assert(n.tag === 'int')
   assert(isLike(n, i))
 })()
-// const showChain = require('./lib/showPrototypeChain')
+const showChain = require('./lib/showPrototypeChain')
 // showChain(Object.getPrototypeOf({}))
 // console.log('--------------')
 // showChain(Object.prototype)
+showChain(Number.prototype)
+console.log('--------------')
+showChain(Math.prototype)
+console.log('--------------')
+showChain(RegExp.prototype)
+console.log('--------------')
+showChain(BigInt.prototype)
 class Long extends Int {
   constructor (i = 5) {
     super(i)
