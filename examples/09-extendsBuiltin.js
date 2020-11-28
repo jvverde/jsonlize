@@ -4,6 +4,7 @@ const assert = require('assert').strict
 const { isClone, isLike } = require('isClone')
 
 const serdes = (v) => deserialize(serialize(v))
+const debug = true
 
 class A extends Number {
   constructor (i = 0) {
@@ -11,8 +12,12 @@ class A extends Number {
     this._src = i
     this._self = this
   }
-  a = function (){}
+  f(){console.log('this', this)}
+  i = this.f
 }
+  // b = this.a
+  // c = a => a * a
+  // d = this.c
   // b = this.a
   // c = a => a * a
   // f(a) { return this + a }
@@ -28,13 +33,23 @@ class A extends Number {
 (function (){
   const x = 6.1
   const y = new A(x)
+  y._src = '99.33'
   //const z = serdes(y)
   const json = serialize(y)
   console.log(json)
   const z = deserialize(json)
   console.log(y)
   console.log(z)
-  assert(isLike(z, y))
+  // console.log('y.g', y.g())
+  // console.log('z.g', z.g())
+  // console.log('y.h', y.h())
+  // console.log('z.h', z.h())
+  console.log('y.i', y.i.toString())
+  console.log('z.i', z.i.toString())
+  //assert(isLike(z, y))
+  //assert(y.i === y.f)
+  //assert(z.i === z.f)
+  //console.log(serialize(z))
   // assert(z.even)
   // assert(!z.odd)
   // assert(!z.exact)
@@ -44,6 +59,9 @@ class A extends Number {
   // assert(y.h === y.g)
   // assert(z.h === z.g)
 })()
+//const v = 'function g(){return 3}'
+//const f = new Function('return ' + v)()
+//console.log(f, f())
 const showChain = require('./lib/showPrototypeChain')
 const getProps = require('./lib/getAllPropertyNames')
 // showChain(Object.getPrototypeOf({}))
