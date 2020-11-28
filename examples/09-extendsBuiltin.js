@@ -13,8 +13,19 @@ class A extends Number {
     this._self = this
   }
   f(){console.log('this', this)}
+  g = a => a * a
+  h = function(){
+    console.log(this)
+    return this
+  }
   i = this.f
+  j = this.g
+  k = this.h
+  get self () { return this._self }
+  get odd () { return this % 2 === 1 }
 }
+  //get exact () { return this == this._src}
+  //get even () {return this % 2 === 0}
   // b = this.a
   // c = a => a * a
   // d = this.c
@@ -38,6 +49,7 @@ class A extends Number {
   const json = serialize(y)
   console.log(json)
   const z = deserialize(json)
+  console.log('---------------------')
   console.log(y)
   console.log(z)
   // console.log('y.g', y.g())
@@ -46,9 +58,15 @@ class A extends Number {
   // console.log('z.h', z.h())
   console.log('y.i', y.i.toString())
   console.log('z.i', z.i.toString())
-  //assert(isLike(z, y))
-  //assert(y.i === y.f)
-  //assert(z.i === z.f)
+  console.log(y.odd)
+  assert(isLike(z, y))
+  assert(y.i === y.f)
+  assert(z.i === z.f)
+  assert(y.j === y.g)
+  assert(z.j === z.g)
+  assert(y.k === y.h)
+  assert(z.k === z.h)
+
   //console.log(serialize(z))
   // assert(z.even)
   // assert(!z.odd)
