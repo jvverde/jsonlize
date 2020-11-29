@@ -6,9 +6,17 @@ const { isClone, isLike } = require('isClone')
 const serdes = (v) => deserialize(serialize(v))
 const debug = true
 
+const obj = {
+  i: 0,
+  inc() {
+    this.i++
+  }
+}
+obj.inc()
 class A extends Number {
-  constructor (i = 0) {
+  constructor (i = 0, o) {
     super(i | 0)
+    this.nested = o
     this.m = new Array(10)
     this.obj = {
       i,
@@ -28,9 +36,12 @@ class A extends Number {
   get val () { return this.obj }
 }
 
+
+
+
 (function (){
   const x = 6.1
-  const y = new A(x)
+  const y = new A(x, obj)
   y.m[3] = 77777
   y.tag = 'tag'
   y.obj.self = y.obj
