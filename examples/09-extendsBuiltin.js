@@ -45,7 +45,9 @@ class A extends Number {
   y.m[3] = 77777
   y.tag = 'tag'
   y.obj.self = y.obj
-  const z = serdes(y)
+  //const z = serdes(y)
+  const json = serialize(y)
+  const z = deserialize(json, A)
   console.log('-------------')
   console.log(y)
   console.log(z)
@@ -55,7 +57,7 @@ class A extends Number {
   assert(y.i === y.f)
   assert(z.i === z.f)
   assert(y.j === y.g)
-  assert(z.j === z.g)
+  assert(z.j === z .g)
   assert(y.k === y.h)
   assert(z.k === z.h)
   assert(9 === z.j(3))

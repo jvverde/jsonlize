@@ -6,9 +6,7 @@ const serialize = object => {
   if (arguments.length === 0) return
   return JSON.stringify(deconstruct(object))
 }
-const deserialize = (json, ...classes) => {
-  return reconstruct(JSON.parse(json), ...classes)
-}
+const deserialize = json => reconstruct(JSON.parse(json))
 
 module.exports.serialize = serialize
 module.exports.deserialize = deserialize
