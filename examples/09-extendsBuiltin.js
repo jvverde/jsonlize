@@ -9,131 +9,76 @@ const debug = true
 class A extends Number {
   constructor (i = 0) {
     super(i | 0)
-    this._src = i
+    this.m = [6]
+    this._src = {
+      i,
+      parent: this,
+    }
+    this.n = this.m
     this._self = this
   }
-  f(){console.log('this', this)}
+  f () { return 2 * this._src }
   g = a => a * a
-  h = function(){
-    console.log(this)
-    return this
-  }
+  h = function () { return this._src }
   i = this.f
   j = this.g
   k = this.h
-  get self () { return this._self }
-  get odd () { return this % 2 === 1 }
 }
-  //get exact () { return this == this._src}
-  //get even () {return this % 2 === 0}
-  // b = this.a
-  // c = a => a * a
-  // d = this.c
-  // b = this.a
-  // c = a => a * a
-  // f(a) { return this + a }
+  // f(){ return 2 * this._src}
   // g = a => a * a
-  // h = this.g
-  //a = function (){}
-  //b = this.a
-  // get exact () { return this == this._src}
-  // get self () {return this._self}
-  // get even () {return this % 2 === 0}
-  // get odd () {return this % 2 === 1}
+  // h = function(){
+  //   return this._src
+  // }
+  // i = this.f
+  // j = this.g
+  // k = this.h
+  // get self () { return this._self }
+  // get odd () { return this % 2 === 1 }
+  // get val () { return this._src }
 
 (function (){
   const x = 6.1
   const y = new A(x)
-  y._src = '99.33'
-  //const z = serdes(y)
-  const json = serialize(y)
-  console.log(json)
-  const z = deserialize(json)
-  console.log('---------------------')
+  y.m[0] = 77777
+  // y.tag = 'tag'
+  const z = serdes(y)
+  console.log('-------------')
   console.log(y)
   console.log(z)
-  // console.log('y.g', y.g())
-  // console.log('z.g', z.g())
-  // console.log('y.h', y.h())
-  // console.log('z.h', z.h())
-  console.log('y.i', y.i.toString())
-  console.log('z.i', z.i.toString())
-  console.log(y.odd)
-  assert(isLike(z, y))
-  assert(y.i === y.f)
-  assert(z.i === z.f)
-  assert(y.j === y.g)
-  assert(z.j === z.g)
-  assert(y.k === y.h)
-  assert(z.k === z.h)
-
-  //console.log(serialize(z))
-  // assert(z.even)
-  // assert(!z.odd)
-  // assert(!z.exact)
-  // assert(9 === z.f(3))
-  // assert(9 === z.g(3))
-  // assert(9 === z.h(3))
-  // assert(y.h === y.g)
-  // assert(z.h === z.g)
+  //assert(isLike(z, y))
+  /* keep intra references */
+  // assert(z === z.self)
+  // assert(y.i === y.f)
+  // assert(z.i === z.f)
+  // assert(y.j === y.g)
+  // assert(z.j === z.g)
+  // assert(y.k === y.h)
+  // assert(z.k === z.h)
+  // assert(9 === z.j(3))
+  // assert(12.2 === z.f())
+  // assert('tag' === z.tag)
 })()
-//const v = 'function g(){return 3}'
-//const f = new Function('return ' + v)()
-//console.log(f, f())
-const showChain = require('./lib/showPrototypeChain')
-const getProps = require('./lib/getAllPropertyNames')
-// showChain(Object.getPrototypeOf({}))
-// console.log('--------------')
-// showChain(Object.prototype)
-// showChain(Number.prototype)
-// console.log('--------------')
-// showChain(Math.prototype)
-// console.log('--------------')
-// showChain(RegExp.prototype)
-// console.log('--------------')
-// showChain(BigInt.prototype)
-// let  n = new Number(9999999999999)
-// console.log(n)
-// console.log('---------------------')
-// showChain(n)
-// console.log('---------------------')
-// getProps(n).forEach(name => {
-//   console.log(name, '=>', n[name])
-// })
-// console.log('---------------------')
-// const m = new Number(7)
-// console.log(m)
-// const r = Object.assign(n,m)
-// console.log(r)
 
-class Long extends A {
+/*
+class B extends A {
   constructor (i = 5) {
     super(i)
     this.cnt = 0
   }
-  get long () { return this }
+  get val () { return this | 0}
   get count () { return this.cnt }
   set count (n) { this.cnt = n}
 }
 
 (function (){
-  const n = new Long(4)
-  const m = serdes(n)
-  assert(isLike(n, m))
-  assert(m.long == 4)
-  assert(m.long |0 === 4)
-  assert(m.int |0 === 4)
-  m.count = 2
-  assert(m.count === 2)
-})//()
+  const b = new B(4.7)
+  const c = serdes(b)
+  assert(isLike(c, b))
+  assert(c.val === 4)
+  c.count = 2
+  assert(c.count === 2)
+})()
 
-// const n = new Int(3)
-// const m = new Number(6)
-// const r = Object.assign(n, m)
-// console.log(n)
-// console.log(r)
-// console.log(r | 0)
-// console.log(r.label)
 
 
 class Sset extends Set {
@@ -155,11 +100,12 @@ class Smap extends Map {
   s.add(s)
   const r = serdes(s)
   assert(r.has(1))
+  assert(r.has(r))
   //console.log(s)
   //console.log(r)
   //assert(isLike(r,s))
 })//()
-
+*/
 
 /*
 serdes(new Smap([[{ i: 1 }, { j: 3 }]]), false, false)

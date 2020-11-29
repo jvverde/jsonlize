@@ -10,7 +10,7 @@ class A {
     this.n = n
   }
   get val () { return this.n }
-  set val (n) {this.n = n}
+  set val (n) { this.n = n }
 }
 
 (function () {
@@ -58,7 +58,9 @@ class C extends A {
   assert(isLike(c, d))
   c.val = [3,7]
   assert(isClone(c.val, [3,7]))
-  assert(!isClone(d.val, [3,7])) // cc is not affect by any changes on ca
-  const e = serdes(c)
-  assert(isClone(e.val, [3,7]))
+  assert(!isClone(d.val, [3,7])) // d is not affect by any changes on c
+  d.val = [4,6]
+  assert(isClone(d.val, [4,6]))
+  const e = serdes(d)
+  assert(isClone(e.val, [4,6 ]))
 })()
