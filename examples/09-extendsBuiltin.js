@@ -9,54 +9,48 @@ const debug = true
 class A extends Number {
   constructor (i = 0) {
     super(i | 0)
-    this.m = [6]
-    this._src = {
+    this.m = new Array(10)
+    this.obj = {
       i,
       parent: this,
     }
     this.n = this.m
     this._self = this
   }
-  f () { return 2 * this._src }
+  f (m = 0) { return m * this.obj.i }
   g = a => a * a
-  h = function () { return this._src }
+  h = function () { return this.obj }
   i = this.f
   j = this.g
   k = this.h
+  get self () { return this._self }
+  get odd () { return this % 2 === 1 }
+  get val () { return this.obj }
 }
-  // f(){ return 2 * this._src}
-  // g = a => a * a
-  // h = function(){
-  //   return this._src
-  // }
-  // i = this.f
-  // j = this.g
-  // k = this.h
-  // get self () { return this._self }
-  // get odd () { return this % 2 === 1 }
-  // get val () { return this._src }
 
 (function (){
   const x = 6.1
   const y = new A(x)
-  y.m[0] = 77777
-  // y.tag = 'tag'
+  y.m[3] = 77777
+  y.tag = 'tag'
+  y.obj.self = y.obj
   const z = serdes(y)
   console.log('-------------')
   console.log(y)
   console.log(z)
-  //assert(isLike(z, y))
+  assert(isLike(z, y))
   /* keep intra references */
-  // assert(z === z.self)
-  // assert(y.i === y.f)
-  // assert(z.i === z.f)
-  // assert(y.j === y.g)
-  // assert(z.j === z.g)
-  // assert(y.k === y.h)
-  // assert(z.k === z.h)
-  // assert(9 === z.j(3))
-  // assert(12.2 === z.f())
-  // assert('tag' === z.tag)
+  assert(z === z.self)
+  assert(y.i === y.f)
+  assert(z.i === z.f)
+  assert(y.j === y.g)
+  assert(z.j === z.g)
+  assert(y.k === y.h)
+  assert(z.k === z.h)
+  assert(9 === z.j(3))
+  assert(x * 3 === z.f(3))
+  assert('tag' === z.tag)
+  assert(y.m.length === z.m.length)
 })()
 
 /*
