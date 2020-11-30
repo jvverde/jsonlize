@@ -1,9 +1,9 @@
 const { serialize, deserialize } = require('../index')
 const { random, lorem } = require('faker')
-const isClone = require('isClone')
+const { isClone, isLike } = require('isClone')
 
-describe('Test (de)serialize of instances of javascript objects', () => {
-  describe('Test if builtin objects are exactly the same', () => {
+describe('Test builtin objects', () => {
+  describe('Test if a deserialized of a serialize is exactly the same as original', () => {
     const obj = { i: 1, j: [2, 3], o: { k: 4 } }
     const array = [1, 2, 3, obj]
     const set = [1, 1, 2, 2, array, obj]
@@ -35,21 +35,23 @@ describe('Test (de)serialize of instances of javascript objects', () => {
     for (const [k, v] of Object.entries(tests)) {
       test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
         const json = serialize(v)
-        const result = deserialize(json)
-        expect(result).toStrictEqual(v)
+        const clone = deserialize(json)
+        expect(clone).toStrictEqual(v)
       })
     }
+  })
+  describe('Test if functions are similar (stringify equality)', () => {
     const fntests = {
       'literal anonymous function': function () {},
       'literal named function': function f () {},
       'Arrow function': () => null,
-      Function: new Function()
+      Function: new Function('a','b','return a +  b')
     }
     for (const [k, v] of Object.entries(fntests)) {
-      test(`Deserialize of a serialized ${k} (${v}) should be strict equal`, () => {
+      test(`Deserialize of a serialized ${k} (${v.toString()}) should be like the original`, () => {
         const json = serialize(v)
-        const result = deserialize(json)
-        const cond = isClone(result, v, { strictly: false })
+        const clone = deserialize(json)
+        const cond = isLike(clone, v)
         expect(cond).toBe(true)
       })
     }
@@ -58,19 +60,34 @@ describe('Test (de)serialize of instances of javascript objects', () => {
     const types = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, Uint8ClampedArray]
     types.forEach(type => {
       const array = new type([1, 2, random.number()])
-      test(`Deserialize of a serialized ${array.constructor.name} should be equal`, () => {
+      test(`Deserialize of a serialized ${array.constructor.name}[${array}] should be equal`, () => {
         const json = serialize(array)
-        const array2 = deserialize(json)
-        expect(array2).toEqual(array)
+        const clone = deserialize(json)
+        expect(clone).toStrictEqual(array)
+        expect(clone.length).toEqual(array.length)
+        expect(clone[2]).toEqual(array[2])
       })
     })
     const bigtypes = [BigInt64Array, BigUint64Array]
     bigtypes.forEach(type => {
-      const array = new type([1n, 2n/*, BigInt(random.hexaDecimal(128))*/])
-      test(`Deserialize of a serialized ${array.constructor.name} should be equal`, () => {
+      const array = new type([1n, 2n, BigInt(random.hexaDecimal(128))])
+      test(`Deserialize of a serialized ${array.constructor.name}[${array}] should be equal`, () => {
         const json = serialize(array)
-        const array2 = deserialize(json)
-        expect(array2).toEqual(array)
+        const clone = deserialize(json)
+        expect(clone).toStrictEqual(array)
+        expect(clone.length).toEqual(array.length)
+        expect(clone[2]).toEqual(array[2])
+      })
+    })
+    const emptypes = [BigInt64Array, BigUint64Array, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, Uint8ClampedArray]
+    emptypes.forEach(type => {
+      const array = new type(random.number(32))
+      test(`Deserialize of a serialized empty ${array.constructor.name} should be equal`, () => {
+        const json = serialize(array)
+        const clone = deserialize(json)
+        expect(clone).toStrictEqual(array)
+        expect(clone.length).toEqual(array.length)
+        expect(clone[0]).toEqual(array[0])
       })
     })
   })
