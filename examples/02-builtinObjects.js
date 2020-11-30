@@ -80,5 +80,28 @@ function bigint(a) {
 bigint()
 bigint(0)
 bigint(3)
-bigint([1n ,2n, 3n])
+bigint([1n ,-2n, -3n])
 
+function biguint(a) {
+  const b = new BigUint64Array(a)
+  const c = serdes(b)
+  assert(isLike(c, b))
+}
+biguint()
+biguint(0)
+biguint(3)
+biguint([1n , 2n, 3n])
+
+function binaryArray(type, a) {
+  const b = new type(a)
+  const c = serdes(b)
+  assert(isLike(c, b))
+  console.log(c, b)
+}
+for (const type of [Int8Array, Uint8Array, Int16Array, Uint16Array,
+  Int32Array, Uint32Array, Uint8ClampedArray, Float32Array, Float64Array]) {
+  binaryArray(type, )
+  binaryArray(type, 0)
+  binaryArray(type, 3)
+  binaryArray(type, [1, 2, 3.5, 300000.3])
+}
