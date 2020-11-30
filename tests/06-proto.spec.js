@@ -4,20 +4,22 @@ const { isClone, isLike } = require('isClone')
 
 const serdes = (v) => deserialize(serialize(v))
 
-describe('Test (de)serialize of instances of classes', () => {
-  class A {
-    constructor (n) {
-     this.n = n
-    }
-    inc (n) { this.n += n }
-    get val () { return this.n }
-    set val (n) { this.n = n}
+describe('Test (de)serialize of prototype objects', () => {
+  function A (n = 1) {
+    this.n = n
   }
+  A.prototype.inc = function (n) { this.n += n }
+  Object.defineProperty(A.prototype, 'val', {
+    get: function () { return this.n },
+    set: function (n) { this.n = n }
+  })
+
   const a = new A(10)
   a.inc(5)
-  describe('Test instance of a class', () => {
+
+  describe('Test object', () => {
     const clone = serdes(a)
-    test('The deserializes of a serialize instance should be similar to original', () => {
+    test('The deserializes of a serialize obvject should be similar to original', () => {
       expect(isLike(clone, a)).toBe(true)
     })
     test('The current values should be preserved', () => {
@@ -26,7 +28,7 @@ describe('Test (de)serialize of instances of classes', () => {
     test('The class methods should be available', () => {
       expect(clone.inc(5) === undefined).toBe(true)
     })
-    test('The class getters should be available', () => {
+    test('The prototype getters should be available', () => {
       expect(clone.val === 20).toBe(true)
     })
     test('The class setters should be available', () => {
@@ -34,11 +36,12 @@ describe('Test (de)serialize of instances of classes', () => {
     })
   })
 
-  class B extends A {
-    dec (n) {
-      this.inc(-n)
-    }
+  function B (n = 1) {
+    A.call(this, n)
   }
+  B.prototype = Object.create(A.prototype)
+  B.prototype.dec = function (n) { this.inc(-n); this.cnt++ }
+  B.prototype.constructor = B
 
   describe('Test inheritance', () => {
     const b = new B(20)
@@ -63,19 +66,15 @@ describe('Test (de)serialize of instances of classes', () => {
     })
   })
 
-  class C {
-    constructor (n) {
-      this._a = new A(n)
-    }
-
-    set a (value) {
-      this._a = value
-    }
-
-    get a () {
-      return this._a
-    }
+  function C (n = 1) {
+    this._a = new A(n)
   }
+
+  Object.defineProperty(C.prototype, 'a', {
+    get: function () { return this._a },
+    set: function (n) { this._a = n }
+  })
+
   describe('Test nested objects', () => {
     const c = new C(20)
     const clone = serdes(c)
@@ -98,4 +97,5 @@ describe('Test (de)serialize of instances of classes', () => {
       expect(clone.a.val = 4).toBe(4)
     })
   })
+
 })
