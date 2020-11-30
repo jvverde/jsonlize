@@ -45,12 +45,7 @@ class A extends Number {
   y.m[3] = 77777
   y.tag = 'tag'
   y.obj.self = y.obj
-  //const z = serdes(y)
-  const json = serialize(y)
-  const z = deserialize(json, A)
-  console.log('-------------')
-  console.log(y)
-  console.log(z)
+  const z = serdes(y)
   assert(isLike(z, y))
   /* keep intra references */
   assert(z === z.self)

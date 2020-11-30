@@ -29,10 +29,19 @@ const newobj = serdes(obj)
 assert(isClone(obj, newobj))
 assert(isClone(obj, newobj))
 
-const array = [1,2]
-const newarray = serdes(array)
-assert(isClone(array, newarray))
-assert(2 === newarray[1])
+;(function () {
+  const array = []
+  const newarray = serdes(array)
+  assert(isClone(array, newarray))
+  assert(0 === newarray.length)
+})()
+
+;(function () {
+  const array = [1,2]
+  const newarray = serdes(array)
+  assert(isClone(array, newarray))
+  assert(2 === newarray[1])
+})()
 
 ;// semi comma is needed here
 (function () {
@@ -62,3 +71,14 @@ assert(1 === newmap.get('a'))
   assert(!newmap.has(obj))  // the 'obj' on map was cloned, so the original 'obj' is not in newmap
   assert(isLike([...newmap.keys()], [sqr, obj])) // but cloned keys still there
 })()
+
+function bigint(a) {
+  const b = new BigInt64Array(a)
+  const c = serdes(b)
+  assert(isLike(c, b))
+}
+bigint()
+bigint(0)
+bigint(3)
+bigint([1n ,2n, 3n])
+
