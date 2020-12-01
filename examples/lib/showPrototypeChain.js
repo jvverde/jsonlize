@@ -12,7 +12,12 @@ function getAllProtoChain(obj, tab='') {
   console.log(`${tab}props.constructor.toString()::`, props.constructor.toString())
   console.log(`${tab}props.constructor.value.toString()::`, (props.constructor.value || '').toString())
   // console.log(`${tab}symbols::`, symbols)
-  if (proto) console.log(`${tab}props::`, props)
+  if (proto) {
+    Object.keys(props).forEach( p => {
+      if (props[p].value instanceof Function) props[p].value = props[p].value.toString()
+      console.log(`${tab}prop[${p}]::`, props[p])
+    })
+  }
   getAllProtoChain(proto, tab + '>>')
 }
 module.exports = getAllProtoChain

@@ -96,7 +96,6 @@ function binaryArray(type, a) {
   const b = new type(a)
   const c = serdes(b)
   assert(isLike(c, b))
-  console.log(c, b)
 }
 for (const type of [Int8Array, Uint8Array, Int16Array, Uint16Array,
   Int32Array, Uint32Array, Uint8ClampedArray, Float32Array, Float64Array]) {
