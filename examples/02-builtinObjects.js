@@ -29,7 +29,8 @@ const newobj = serdes(obj)
 assert(isClone(obj, newobj))
 assert(isClone(obj, newobj))
 
-;(function () {
+;// semi comma is needed here
+(function () {
   const array = []
   const newarray = serdes(array)
   assert(isClone(array, newarray))
@@ -43,8 +44,7 @@ assert(isClone(obj, newobj))
   assert(2 === newarray[1])
 })()
 
-;// semi comma is needed here
-(function () {
+;(function () {
   const array = new Array(5)
   const newarray = serdes(array)
   assert(isClone(array, newarray))
