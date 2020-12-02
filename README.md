@@ -1,5 +1,5 @@
 # serialize
-Serialize nested objects
+Serialize Objects, Functions, primitive types, builtin objects, nested objects, class instances, methods, setters and getters, cross and self references objects, Regular Expressions (including status), Maps, Sets, Errors, binary arrays
 
 <!--
   -- This file is auto-generated from README_js.md. Changes should be made there.
@@ -29,12 +29,12 @@ class A {
 }
 const a = new A(10)
 
-const json = serialize(a) // json = '{"_class":"A","_key":"","_value":{"n":10}}'
+const json = serialize(a)
 
-const aa = deserialize(json, A)
+const aa = deserialize(json)
 aa.inc(5)
 ```
-**2. Serialize and deserializenested objects**
+**2. Serialize and deserialize nested objects**
 
 ```javascript
 const { serialize, deserialize } = require('jsonlize')
@@ -61,8 +61,8 @@ class C {
 
 const c = new C(10)
 
-const json = serialize(c) // json = '{"_class":"C","_key":"","_value":{"_a":{"_class":"A","_key":"_a","_value":{"n":10}}}}'
+const json = serialize(c)
 
-const cc = deserialize(json, C, A)
+const cc = deserialize(json)
 cc.a.inc(5)
 ```
