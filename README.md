@@ -67,13 +67,13 @@ const cc = deserialize(json)
 cc.a.inc(5)
 ```
 # Limitations
-**1. Functions defined in a scope
+**1. Functions defined in a scope**
 If won't work if functions access to scoped variables
 ```javascript
 let obj = {/*...*/}
 const f = function(){ return obj.prop }
 ```
-**2. Class Private members
+**2. Class Private members**
 ```javascript
 class A{
   #x = 'I am private'
