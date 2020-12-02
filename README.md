@@ -1,4 +1,4 @@
-# serialize
+# Serialize
 Serialize Objects, Functions, primitive types, builtin objects, nested objects, class instances, methods, setters and getters, cross and self references objects, Regular Expressions (including status), Maps, Sets, Errors, binary arrays
 
 <!--
@@ -65,4 +65,17 @@ const json = serialize(c)
 
 const cc = deserialize(json)
 cc.a.inc(5)
+```
+# Limitations
+** Functions defined in a scope
+If won't work if functions access to scoped variables
+```javascript
+let obj = {/*...*/}
+const f = function(){ return obj.prop }
+```
+**Class Private members
+```javascript
+class A{
+  #x = 'I am private'
+}
 ```
