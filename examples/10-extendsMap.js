@@ -24,6 +24,7 @@ class Smap extends Map {
   const obj = {m}
   m.set(2, obj)
   m.set(3, m)
+  m.set(m, 1)
   const r = serdes(m)
   console.log('---------------')
   console.log(m)
