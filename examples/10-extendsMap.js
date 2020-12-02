@@ -10,9 +10,9 @@ class Smap extends Map {
     super(m)
     this.self = this
   }
-  setLinkedList(...args) {
+  setLinkedList(...args) { // Create a circular linked list
     [...args].forEach((v, k, array) => {
-      this.set(v, array[k + 1])
+      this.set(v, array[(k + 1) % array.length])
     })
   }
   get name () { return 'my name' }
@@ -20,15 +20,13 @@ class Smap extends Map {
 
 (function (){
   const m = new Smap([[1, 'a']])
-  //m.setLinkedList('a','b','c')
-  const obj = {m}
-  m.set(2, obj)
-  m.set(3, m)
-  m.set(m, 1)
+  const o = {m}
+  const a = [m, o]
+  const s = new Set([m, o, a])
+  a.push(s, a)
+  s.add(s)
+  Object.assign(o, {o, a, s})
+  m.setLinkedList(m, o, a, s, null, undefined, Infinity, true, 0, 3n)
   const r = serdes(m)
-  console.log('---------------')
-  console.log(m)
-  console.log('---------------')
-  console.log(r)
-  //assert(isLike(r, m))
+  assert(isLike(r, m))
 })()
