@@ -72,13 +72,15 @@ cc.a.inc(5)
 It won't work if functions access to scoped variables
 ```javascript
 let obj = {/*...*/}
-const f = function(){ return obj.prop }
+const f = function () { return obj.prop }
+const json = serialize(f)
 ```
 **2. Class Private members**
 
 Instances of classes with private members cannot be serialized without errors
 ```javascript
-class A{
+class A {
   #x = 'I am private'
 }
+const json = serialize(new A())
 ```
