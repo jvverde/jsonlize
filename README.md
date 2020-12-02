@@ -68,12 +68,15 @@ cc.a.inc(5)
 ```
 # Limitations
 **1. Functions defined in a scope**
-If won't work if functions access to scoped variables
+
+It won't work if functions access to scoped variables
 ```javascript
 let obj = {/*...*/}
 const f = function(){ return obj.prop }
 ```
 **2. Class Private members**
+
+Instances of classes with private members cannot be serialized without errors
 ```javascript
 class A{
   #x = 'I am private'
